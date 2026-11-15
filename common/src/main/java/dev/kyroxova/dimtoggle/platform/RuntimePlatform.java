@@ -1,4 +1,4 @@
-package dev.example.examplemod.platform;
+package dev.kyroxova.dimtoggle.platform;
 
 import java.nio.file.Path;
 import java.util.Objects;
