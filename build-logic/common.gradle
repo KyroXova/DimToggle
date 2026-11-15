@@ -16,15 +16,20 @@ sourceSets {
     main {
         java.setSrcDirs(['common/src/main/java', "versions/${targetMinecraft}/common/src/main/java", "versions/${targetMinecraft}/${targetLoader}/src/main/java"].collect { new File(templateRoot,it) })
         resources.setSrcDirs(['common/src/main/resources', "versions/${targetMinecraft}/common/src/main/resources", "versions/${targetMinecraft}/${targetLoader}/src/main/resources"].collect { new File(templateRoot,it) })
+        if (project.hasProperty('dimtoggleGameTest')) {
+            java.srcDir(new File(templateRoot, "versions/${targetMinecraft}/${targetLoader}/src/gametest/java"))
+            resources.srcDir(new File(templateRoot, "versions/${targetMinecraft}/${targetLoader}/src/gametest/resources"))
+        }
     }
     test {
-        java.setSrcDirs([new File(templateRoot,'common/src/test/java')])
+        java.setSrcDirs([new File(templateRoot,'common/src/test/java'), new File(templateRoot,"versions/${targetMinecraft}/${targetLoader}/src/test/java")])
         resources.setSrcDirs([new File(templateRoot,'common/src/test/resources')])
     }
 }
 dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'net.luckperms:api:5.4'
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 processResources {

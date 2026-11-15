@@ -10,6 +10,10 @@ buildscript {
     if (loader != 'core' && !pins.getProperty('loaders').split(',').contains(loader)) {
         throw new GradleException("${loader} is unavailable for ${mc}; see targets.json")
     }
+    def implemented = true
+    if (loader != 'core' && !implemented && !project.hasProperty('allowIncompleteTarget')) {
+        throw new GradleException("DimToggle behavior is not implemented for ${mc}/${loader}. Use -PallowIncompleteTarget only for template development.")
+    }
     project.ext.targetPins = pins
     project.ext.targetMinecraft = mc
     project.ext.targetLoader = loader

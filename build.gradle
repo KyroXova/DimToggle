@@ -16,8 +16,39 @@ tasks.named('clean') {
 }
 ['runClient', 'runServer'].each { targetTask ->
     tasks.register(targetTask, Exec) {
-        commandLine python, helper, 'gradle', "-Pmc=${project.findProperty('mc') ?: '1.20.1'}", "-Ploader=${project.findProperty('loader') ?: 'fabric'}", targetTask
+        def mc = project.findProperty('mc') ?: '1.20.1'
+        def ldr = project.findProperty('loader') ?: 'fabric'
+        def cmd = [python, helper, 'gradle', "-Pmc=${mc}", "-Ploader=${ldr}"]
+        if (project.hasProperty('allowIncompleteTarget')) {
+            cmd << '-PallowIncompleteTarget'
+        }
+        cmd << targetTask
+        commandLine cmd
     }
 }
 tasks.register('coreCheck', Exec) { commandLine python, helper, 'core' }
 tasks.register('validateTemplate', Exec) { commandLine python, helper, 'validate' }
+
+def inventoryFile = file('targets.json')
+if (inventoryFile.isFile()) {
+    def targetsData = new groovy.json.JsonSlurper().parse(inventoryFile)['targets']
+    targetsData.each { target ->
+        def mcVer = target['minecraft']
+        def mcSanitized = mcVer.replace('.', '_')
+        target['loaders'].keySet().each { ldr ->
+            ['runClient', 'runServer'].each { verb ->
+                def taskName = "${verb}_${mcSanitized}_${ldr}"
+                tasks.register(taskName, Exec) {
+                    group = "minecraft ${verb}"
+                    description = "Runs ${verb} for Minecraft ${mcVer} (${ldr})"
+                    def cmd = [python, helper, 'gradle', "-Pmc=${mcVer}", "-Ploader=${ldr}"]
+                    if (project.hasProperty('allowIncompleteTarget')) {
+                        cmd << '-PallowIncompleteTarget'
+                    }
+                    cmd << verb
+                    commandLine cmd
+                }
+            }
+        }
+    }
+}

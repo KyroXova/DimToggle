@@ -1,10 +1,83 @@
+# DimToggle
+
+> **Development status:** This reconstruction is incomplete. Dimension-control
+> adapters currently exist for Minecraft 1.20.1 Forge and Fabric, with an
+> experimental 1.20 Forge/Fabric and 1.20.2 Forge/Fabric/NeoForge ports. Gameplay has not yet been verified end to end. The
+> remaining entries in the version catalog are template scaffolding, not
+> supported builds. Do not use these builds for access control in production.
+
+A high-performance dimension access control and dimension locking mod for Minecraft.
+
+DimToggle allows server administrators and modpack creators to lock, unlock, restrict, and manage access to any dimension (vanilla or modded) dynamically or permanently.
+
+## Key Features
+
+- **Dynamic Dimension Locking**: Lock any dimension permanently or for a specific duration (e.g. `2d`, `12h30m`, `45m`).
+- **Timed Expiry & Announcements**: Automatically unlocks dimensions when the timer expires and broadcasts server-wide notifications.
+- **Granular Access Control**:
+  - **Operator Bypass**: Configurable (`allowOps`) permission level 2 access.
+  - **Specific Users**: Allowlist individual players via commands (`/dimtoggle allow`) or configuration.
+  - **Specific Groups**: Allowlist player groups via commands (`/dimtoggle allowgroup`), LuckPerms groups, or Minecraft Scoreboard Teams.
+  - **LuckPerms Integration**: Full integration supporting permission nodes (`dimtoggle.<namespace>.<dimension>`, `dimtoggle.*`, `dimtoggle.bypass`).
+- **Safe Enforcement**: Blocks unauthorized travel, provides rate-limited notification messages, and safely relocates players (`teleportToSpawn`) to avoid portal trap loops or void falls.
+- **Convenient Teleport**: Safe dimension teleportation command (`/dt <player> <dimension>`).
+
+## Commands
+
+- `/dimtoggle list`: View all currently locked dimensions, their lock durations, and remaining times.
+- `/dimtoggle lock <dimension> [duration]`: Lock a dimension permanently or for a timed duration (e.g., `1d2h`, `30m`).
+- `/dimtoggle unlock <dimension>`: Unlock a dimension for all players.
+- `/dimtoggle enable <dimension>`: Lock alias (adds dimension to restricted list).
+- `/dimtoggle disable <dimension>`: Unlock alias (removes dimension from restricted list).
+- `/dimtoggle allow <dimension> <player>`: Permit a specific user to enter a locked dimension.
+- `/dimtoggle disallow <dimension> <player>`: Remove a user from a dimension's allowlist.
+- `/dimtoggle allowgroup <dimension> <group>`: Permit a specific group (LuckPerms or Scoreboard Team) to enter.
+- `/dimtoggle disallowgroup <dimension> <group>`: Remove a group from a dimension's allowlist.
+- `/dimtoggle reload`: Reload `dimtoggle.json` configuration from disk.
+- `/dt <player> <dimension>`: Safely teleport players to a dimension spawn position.
+
+## Configuration (`config/dimtoggle.json`)
+
+```json
+{
+  "enableLuckPerms": true,
+  "teleportToSpawn": true,
+  "allowOps": true,
+  "restrictedDimensions": [
+    "minecraft:the_end",
+    "minecraft:the_nether"
+  ],
+  "allowedUsers": {
+    "minecraft:the_end": ["Alice", "Bob"]
+  },
+  "allowedGroups": {
+    "minecraft:the_end": ["vip", "donator"]
+  }
+}
+```
+
+`restrictedDimensions` seeds the per-world lock state the first time that world
+starts with DimToggle. After that, use the lock and unlock commands; reloading
+the JSON does not replace existing world locks. Timed locks use wall-clock time
+and can expire while the server is stopped.
+
+## Architecture & Multi-Version Matrix
+
+DimToggle is built on a shared-core architecture:
+- `common/src/main/java`: Platform-independent dimension lock management (`DimensionLocks`), access rules (`AccessPolicy`), duration parsing (`LockDuration`), LuckPerms reflection bridge (`LuckPermsAccess`), and configuration (`ModConfig`). Java 8 compatible across all loaders.
+- `versions/<mc>/<loader>`: Thin platform entrypoints, Forge/NeoForge event buses, Fabric Mixins, commands, and loader lifecycle hooks.
+
 # Minecraft multi-version template
 
 A shared Java core with thin Fabric, Forge, and NeoForge entrypoints. The inventory covers every stable Java Edition release from **1.16 through 26.3**, including patch releases: 40 releases and 98 loader targets at creation.
 
 No Stonecutter, Architectury, preprocessing, runtime compatibility framework, or local mod JAR dependencies. Standard loader Gradle plugins remain necessary.
 
-## Start here
+## Template build tooling
+
+Only 1.20.1 Forge and Fabric currently have DimToggle adapters. Other target
+builds are deliberately blocked unless `-PallowIncompleteTarget` is supplied
+for template development; they do not enforce dimension restrictions.
 
 Install Python 3.11+ and JDKs 8, 16, 17, 21, and 25 for the complete matrix. Set `JAVA_8_HOME`, `JAVA_16_HOME`, `JAVA_17_HOME`, `JAVA_21_HOME`, and `JAVA_25_HOME` to their installation directories. A selected target only needs its Minecraft JDK plus the JDK running its Gradle profile (21 or 25). The launcher checks the Gradle runtime before starting; Gradle toolchains select the target JDK for compilation, tests, and supported game launch tasks. The standalone core check uses JDK 21 and enforces Java 8 APIs.
 
