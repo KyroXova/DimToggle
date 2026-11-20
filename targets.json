@@ -7,7 +7,7 @@
       "java": 8,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         }
       },
@@ -21,11 +21,11 @@
       "java": 8,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "32.0.108"
         }
       },
@@ -38,11 +38,11 @@
       "java": 8,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "33.0.61"
         }
       },
@@ -55,11 +55,11 @@
       "java": 8,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "34.1.0"
         }
       },
@@ -72,11 +72,11 @@
       "java": 8,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "35.1.4"
         }
       },
@@ -89,11 +89,11 @@
       "java": 8,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "36.2.34"
         }
       },
@@ -106,7 +106,7 @@
       "java": 16,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         }
       },
@@ -120,11 +120,11 @@
       "java": 16,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "37.1.1"
         }
       },
@@ -137,11 +137,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "38.0.17"
         }
       },
@@ -154,11 +154,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "39.1.0"
         }
       },
@@ -171,11 +171,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "40.3.0"
         }
       },
@@ -188,11 +188,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "41.1.0"
         }
       },
@@ -205,11 +205,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "42.0.9"
         }
       },
@@ -222,11 +222,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "43.5.0"
         }
       },
@@ -239,11 +239,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "44.1.0"
         }
       },
@@ -256,11 +256,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "45.4.0"
         }
       },
@@ -273,11 +273,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "46.0.14"
         }
       },
@@ -290,11 +290,11 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "47.4.28"
         }
       },
@@ -307,15 +307,15 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "48.1.0"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "20.2.93"
         }
       },
@@ -326,15 +326,15 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "49.0.2"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "20.3.8-beta"
         }
       },
@@ -345,15 +345,15 @@
       "java": 17,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "49.2.13"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "20.4.253"
         }
       },
@@ -364,11 +364,11 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "20.5.21-beta"
         }
       },
@@ -381,15 +381,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "50.2.14"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "20.6.144"
         }
       },
@@ -400,15 +400,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "51.0.33"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.0.167"
         }
       },
@@ -419,15 +419,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "52.1.20"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.1.265"
         }
       },
@@ -438,11 +438,11 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.2.1-beta"
         }
       },
@@ -455,15 +455,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "53.1.16"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.3.100"
         }
       },
@@ -474,15 +474,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "54.1.22"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.4.161"
         }
       },
@@ -493,15 +493,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "55.1.18"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.5.101"
         }
       },
@@ -512,15 +512,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "56.0.9"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.6.20-beta"
         }
       },
@@ -531,15 +531,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "57.0.3"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.7.25-beta"
         }
       },
@@ -550,15 +550,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "58.1.26"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.8.57"
         }
       },
@@ -569,15 +569,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "59.0.5"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.9.16-beta"
         }
       },
@@ -588,15 +588,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "60.1.18"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.10.64"
         }
       },
@@ -607,15 +607,15 @@
       "java": 21,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "61.2.4"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "21.11.48"
         }
       },
@@ -626,15 +626,15 @@
       "java": 25,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "62.0.9"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "26.1.0.19-beta"
         }
       },
@@ -645,15 +645,15 @@
       "java": 25,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "63.0.2"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "26.1.1.15-beta"
         }
       },
@@ -664,15 +664,15 @@
       "java": 25,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "64.1.5"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "26.1.2.126"
         }
       },
@@ -683,15 +683,15 @@
       "java": 25,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "65.1.5"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "26.2.0.93"
         }
       },
@@ -702,15 +702,15 @@
       "java": 25,
       "loaders": {
         "fabric": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "0.20.1"
         },
         "forge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "66.1.0"
         },
         "neoforge": {
-          "status": "build-verified",
+          "status": "unverified",
           "dependency": "26.3.0.101"
         }
       },
