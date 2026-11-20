@@ -8,11 +8,25 @@ dependencies {
         implementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
     } else {
         modImplementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
+        if (targetPins.getProperty('fabric.api')) {
+            modImplementation "net.fabricmc.fabric-api:fabric-api:${targetPins.getProperty('fabric.api')}"
+        }
     }
 }
 loom {
     runs {
-        client { client(); runDir(new File(templateRoot,"run/${targetMinecraft}/fabric/client").absolutePath) }
+        client {
+            client(); runDir(new File(templateRoot,"run/${targetMinecraft}/fabric/client").absolutePath)
+            if (project.hasProperty('dimtoggleSmokeTest')) {
+                vmArg '-Ddimtoggle.test.exitOnTitle=true'
+                if (project.hasProperty('dimtoggleSmokeRunId')) vmArg "-Ddimtoggle.test.runId=${project.property('dimtoggleSmokeRunId')}"
+            }
+        }
         server { server(); runDir(new File(templateRoot,"run/${targetMinecraft}/fabric/server").absolutePath) }
+    }
+}
+gradle.projectsEvaluated {
+    tasks.matching { it.name.startsWith('run') }.configureEach {
+        dependsOn tasks.named('processResources')
     }
 }

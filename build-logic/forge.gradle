@@ -23,16 +23,30 @@ minecraft {
     runs {
         client {
             workingDirectory new File(templateRoot,"run/${targetMinecraft}/forge/client")
-            mods { examplemod { source sourceSets.main } }
+            if (project.hasProperty('dimtoggleSmokeTest')) {
+                property 'dimtoggle.test.exitOnTitle', 'true'
+                if (project.hasProperty('dimtoggleSmokeRunId')) property 'dimtoggle.test.runId', project.property('dimtoggleSmokeRunId')
+            }
+            mods { dimtoggle { source sourceSets.main } }
         }
         server {
             workingDirectory new File(templateRoot,"run/${targetMinecraft}/forge/server")
-            mods { examplemod { source sourceSets.main } }
+            mods { dimtoggle { source sourceSets.main } }
+        }
+        if (project.hasProperty('dimtoggleGameTest')) {
+            gameTestServer {
+                workingDirectory new File(templateRoot,"run/${targetMinecraft}/forge/gametest")
+                property 'forge.enabledGameTestNamespaces', 'dimtoggle'
+                mods { dimtoggle { source sourceSets.main } }
+            }
         }
     }
 }
 dependencies { minecraft "net.minecraftforge:forge:${targetMinecraft}-${targetPins.getProperty('forge.version')}" }
 gradle.projectsEvaluated {
+    tasks.matching { it.name.startsWith('run') }.configureEach {
+        dependsOn tasks.named('processResources')
+    }
     def reobfuscate = tasks.findByName('reobfJar')
     if (reobfuscate != null) {
         tasks.named('jar') { finalizedBy(reobfuscate) }
