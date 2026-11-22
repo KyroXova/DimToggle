@@ -715,14 +715,14 @@ def generate_forge_control(mc: str) -> str:
     pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
 
     if is_212:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
+        teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
     elif tier <= 3 or mc.startswith("1.19"):
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
-        teleport_bounce = "player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = f"player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
     else:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
     inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
     yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
@@ -1149,11 +1149,11 @@ def generate_neoforge_control(mc: str) -> str:
     }"""
 
     if is_212:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
+        teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
     else:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=False)
     command_tree = generate_command_tree()
@@ -1517,14 +1517,14 @@ def generate_fabric_control(mc: str) -> str:
         broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastSystemMessage(Component.literal({expr}), false);'
 
     if is_212:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
+        teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
     elif tier <= 3 or mc.startswith("1.19"):
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
-        teleport_bounce = "player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = f"player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
     else:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
+        teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=True)
     command_tree = generate_command_tree()
