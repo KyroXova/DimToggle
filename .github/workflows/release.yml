@@ -104,10 +104,45 @@ jobs:
           echo "github_release_exists=${GITHUB_RELEASE_EXISTS}" >> "$GITHUB_OUTPUT"
           echo "release_commit_sha=${RELEASE_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
 
-  build-release:
+  build-release-matrix:
     needs: check-version
     if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - mc: '1.18.2'
+            loader: 'fabric'
+          - mc: '1.18.2'
+            loader: 'forge'
+          - mc: '1.19.2'
+            loader: 'fabric'
+          - mc: '1.19.2'
+            loader: 'forge'
+          - mc: '1.20.1'
+            loader: 'fabric'
+          - mc: '1.20.1'
+            loader: 'forge'
+          - mc: '1.20.4'
+            loader: 'fabric'
+          - mc: '1.20.4'
+            loader: 'forge'
+          - mc: '1.20.4'
+            loader: 'neoforge'
+          - mc: '1.21.1'
+            loader: 'fabric'
+          - mc: '1.21.1'
+            loader: 'forge'
+          - mc: '1.21.1'
+            loader: 'neoforge'
+          - mc: '1.21.4'
+            loader: 'fabric'
+          - mc: '1.21.4'
+            loader: 'forge'
+          - mc: '1.21.4'
+            loader: 'neoforge'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -130,31 +165,42 @@ jobs:
             21
             25
 
+      - name: Configure Java environment variables
+        run: |
+          echo "JAVA_8_HOME=$JAVA_HOME_8_X64" >> "$GITHUB_ENV"
+          echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
+
       - name: Make scripts executable
         run: chmod +x gradlew modw
 
-      - name: Run matrix validation and core tests
-        run: |
-          python tools/kyro/template.py validate
-          python tools/kyro/template.py core
+      - name: Build target artifact
+        run: python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
 
-      - name: Build release matrix targets
-        run: |
-          mkdir -p release-artifacts
-          TARGETS=(
-            "1.18.2 forge" "1.18.2 fabric"
-            "1.19.2 forge" "1.19.2 fabric"
-            "1.20.1 forge" "1.20.1 fabric"
-            "1.20.4 forge" "1.20.4 fabric" "1.20.4 neoforge"
-            "1.21.1 forge" "1.21.1 fabric" "1.21.1 neoforge"
-            "1.21.4 forge" "1.21.4 fabric" "1.21.4 neoforge"
-          )
-          for pair in "${TARGETS[@]}"; do
-            read -r mc loader <<< "$pair"
-            echo "Building $mc $loader..."
-            python tools/kyro/template.py gradle "-Pmc=$mc" "-Ploader=$loader" build
-            cp build/$mc/$loader/libs/*.jar release-artifacts/ 2>/dev/null || true
-          done
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-${{ matrix.mc }}-${{ matrix.loader }}
+          path: build/${{ matrix.mc }}/${{ matrix.loader }}/libs/*.jar
+          if-no-files-found: error
+
+  publish-release:
+    needs: [check-version, build-release-matrix]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.check-version.outputs.release_commit_sha }}
+
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-jars-*
+          path: release-artifacts
+          merge-multiple: true
 
       - name: Publish GitHub Release
         if: needs.check-version.outputs.github_release_exists != 'true'
@@ -171,7 +217,7 @@ jobs:
           files: release-artifacts/*.jar
 
   sync-description:
-    needs: [check-version, build-release]
+    needs: [check-version, publish-release]
     if: needs.check-version.outputs.is_prerelease != 'true'
     uses: ./.github/workflows/sync-curseforge-description.yml
     secrets:

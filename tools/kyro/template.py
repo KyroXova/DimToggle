@@ -45,7 +45,11 @@ def gradle(arguments):
     for major in (8,16,17,21,25):
         if f'java.{major}.home' in local:
             env[f'JAVA_{major}_HOME'] = local[f'java.{major}.home']
-    java_home = env.get(f'JAVA_{config["java"]}_HOME') or env.get('JAVA_HOME')
+    req_java = config["java"]
+    java_home = (env.get(f'JAVA_{req_java}_HOME') or 
+                 env.get(f'JAVA_HOME_{req_java}_X64') or 
+                 env.get(f'JAVA_HOME_{req_java}_arm64') or 
+                 env.get('JAVA_HOME'))
     executable = Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java') if java_home else Path('java')
     version = subprocess.run([str(executable),'-version'],capture_output=True,text=True)
     match = re.search(r'version "(?:1\.)?(\d+)',version.stderr+version.stdout)
