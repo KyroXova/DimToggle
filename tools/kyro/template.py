@@ -59,7 +59,8 @@ def gradle(arguments):
     if java_home: env['JAVA_HOME'] = java_home
     project_root = ROOT / '.gradle/build-roots' / mc / loader
     project_root.mkdir(parents=True,exist_ok=True)
-    (project_root / 'settings.gradle').write_text("rootProject.name = 'minecraft-mod-template'\n",encoding='utf-8')
+    mod_name = properties(ROOT / 'properties/mod.properties').get('mod.name', 'DimToggle')
+    (project_root / 'settings.gradle').write_text(f"rootProject.name = '{mod_name}'\n",encoding='utf-8')
     (project_root / 'build.gradle').write_bytes((ROOT / 'build-logic/target.gradle').read_bytes())
     (project_root / 'gradle.properties').write_bytes((ROOT / 'gradle.properties').read_bytes())
     command = [str(executable),'-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments]

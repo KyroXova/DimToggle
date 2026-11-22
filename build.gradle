@@ -27,6 +27,7 @@ tasks.named('clean') {
     }
 }
 tasks.register('coreCheck', Exec) { commandLine python, helper, 'core' }
+tasks.register('validateMatrix', Exec) { commandLine python, helper, 'validate' }
 tasks.register('validateTemplate', Exec) { commandLine python, helper, 'validate' }
 
 def inventoryFile = file('targets.json')

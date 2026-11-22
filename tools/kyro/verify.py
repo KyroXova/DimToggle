@@ -24,10 +24,11 @@ def inspect_artifact(mc, loader):
     with zipfile.ZipFile(jar) as archive:
         names = archive.namelist()
         package = metadata['mod.group'].replace('.','/')+'/'+metadata['mod.id']
-        assert package+'/TemplateMod.class' in names, 'Shared initializer missing'
+        init_class = 'DimToggleMod.class' if (package+'/DimToggleMod.class') in names else 'TemplateMod.class'
+        assert package+'/'+init_class in names, 'Shared initializer missing'
         assert package+f'/{loader}/Entrypoint.class' in names, 'Loader entrypoint missing'
         target_java = int(properties(ROOT / 'properties' / f'{mc}.properties')['java.release'])
-        for name in (package+'/TemplateMod.class',package+f'/{loader}/Entrypoint.class'):
+        for name in (package+'/'+init_class,package+f'/{loader}/Entrypoint.class'):
             assert int.from_bytes(archive.read(name)[6:8],'big') == target_java+44, 'Incorrect Java bytecode target'
         assert not any(name.endswith('.java') for name in names), 'Sources in production JAR'
         resource = 'fabric.mod.json' if loader == 'fabric' else next(n for n in names if n in ('META-INF/mods.toml','META-INF/neoforge.mods.toml'))

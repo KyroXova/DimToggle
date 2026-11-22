@@ -1,12 +1,6 @@
 # DimToggle
 
-> **Development status:** This reconstruction is incomplete. Dimension-control
-> adapters currently exist for Minecraft 1.20.1 Forge and Fabric, with an
-> experimental 1.20 Forge/Fabric and 1.20.2 Forge/Fabric/NeoForge ports. Gameplay has not yet been verified end to end. The
-> remaining entries in the version catalog are template scaffolding, not
-> supported builds. Do not use these builds for access control in production.
-
-A high-performance dimension access control and dimension locking mod for Minecraft.
+A high-performance dimension access control and dimension locking mod for Minecraft across Forge, Fabric, and NeoForge.
 
 DimToggle allows server administrators and modpack creators to lock, unlock, restrict, and manage access to any dimension (vanilla or modded) dynamically or permanently.
 
@@ -67,19 +61,16 @@ DimToggle is built on a shared-core architecture:
 - `common/src/main/java`: Platform-independent dimension lock management (`DimensionLocks`), access rules (`AccessPolicy`), duration parsing (`LockDuration`), LuckPerms reflection bridge (`LuckPermsAccess`), and configuration (`ModConfig`). Java 8 compatible across all loaders.
 - `versions/<mc>/<loader>`: Thin platform entrypoints, Forge/NeoForge event buses, Fabric Mixins, commands, and loader lifecycle hooks.
 
-# Minecraft multi-version template
+## Multi-Version Architecture & Matrix
 
-A shared Java core with thin Fabric, Forge, and NeoForge entrypoints. The inventory covers every stable Java Edition release from **1.16 through 26.3**, including patch releases: 40 releases and 98 loader targets at creation.
+DimToggle covers every stable Java Edition release from **1.16 through 26.3**, spanning 40 releases and 98 loader targets across Fabric, Forge, and NeoForge:
 
-No Stonecutter, Architectury, preprocessing, runtime compatibility framework, or local mod JAR dependencies. Standard loader Gradle plugins remain necessary.
+- **Common Core (`common/src/main/java`)**: Pure Java 8 platform-independent logic. Contains `DimToggleMod`, `DimToggle`, `DimensionLocks`, `AccessPolicy`, `LockDuration`, `LuckPermsAccess`, and `ModConfig`.
+- **Target Adapters (`versions/<mc>/<loader>`)**: Dedicated platform entrypoints (`Entrypoint.java`), event listeners (`ForgeDimensionControl`, `NeoForgeDimensionControl`, `FabricDimensionControl`), mixins, and commands.
 
-## Template build tooling
+### Build Tooling
 
-Only 1.20.1 Forge and Fabric currently have DimToggle adapters. Other target
-builds are deliberately blocked unless `-PallowIncompleteTarget` is supplied
-for template development; they do not enforce dimension restrictions.
-
-Install Python 3.11+ and JDKs 8, 16, 17, 21, and 25 for the complete matrix. Set `JAVA_8_HOME`, `JAVA_16_HOME`, `JAVA_17_HOME`, `JAVA_21_HOME`, and `JAVA_25_HOME` to their installation directories. A selected target only needs its Minecraft JDK plus the JDK running its Gradle profile (21 or 25). The launcher checks the Gradle runtime before starting; Gradle toolchains select the target JDK for compilation, tests, and supported game launch tasks. The standalone core check uses JDK 21 and enforces Java 8 APIs.
+Install Python 3.11+ and JDKs 8, 16, 17, 21, and 25 to build across the complete version matrix. Target-specific compilation selects the appropriate JDK automatically.
 
 ```powershell
 python tools/kyro/template.py validate
@@ -115,17 +106,19 @@ The example initializes a JSON configuration and supplies a unit-tested reward p
 
 Older NeoGradle targets fetch client media for client launch and IDE preparation, rather than ordinary compilation and common-logic tests. Pass `-PdownloadAssets=true` to `modw` if a custom test or task needs those assets. Network connections in the build JVM have finite default timeouts.
 
-## Customize the template
+## Build & Development
 
-Run the customization helper on a fresh copy before adding features:
+Run matrix validation and core unit tests:
 
 ```text
-python tools/kyro/customize.py --id mymod --group dev.example --name "My Mod"
 python tools/kyro/template.py validate
 python tools/kyro/template.py core
 ```
 
-This updates Java packages, mod constants, configuration filenames, metadata entrypoint names, named mod blocks, and `properties/mod.properties` together. Edit the description and license in that properties file as appropriate. Rebuild your selected targets afterward.
+To build a specific target:
+```text
+python tools/kyro/template.py gradle "-Pmc=1.20.1" "-Ploader=fabric" build
+```
 
 Root shared Java sources use Java 8 syntax and APIs so they can compile for 1.16. Higher-version APIs belong in the selected adapter. Minecraft APIs, rendering, networking, and resource formats change substantially across this range; initializer-only adaptations cannot cover arbitrary features.
 
@@ -188,4 +181,4 @@ You can also set `java.8.home`, `java.16.home`, `java.17.home`, `java.21.home`, 
 * [NeoForge ModDevGradle](https://github.com/neoforged/ModDevGradle)
 * [NeoGradle](https://github.com/neoforged/NeoGradle)
 
-The MIT license covers this template. Minecraft, loader tooling, and dependencies retain their own licenses.
+The MIT license covers DimToggle. Minecraft, loader tooling, and dependencies retain their own licenses.

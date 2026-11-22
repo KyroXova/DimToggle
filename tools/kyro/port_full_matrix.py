@@ -1922,7 +1922,7 @@ public abstract class ServerPlayerMixin {{
 def generate_fabric_entrypoint(mc: str) -> str:
     return """package dev.kyroxova.dimtoggle.fabric;
 
-import dev.kyroxova.dimtoggle.TemplateMod;
+import dev.kyroxova.dimtoggle.DimToggleMod;
 import dev.kyroxova.dimtoggle.platform.RuntimePlatform;
 import dev.kyroxova.dimtoggle.config.ModConfig;
 import net.fabricmc.api.ModInitializer;
@@ -1932,7 +1932,7 @@ import java.nio.file.Path;
 public final class Entrypoint implements ModInitializer {
     public void onInitialize() {
         Path configDir = FabricLoader.getInstance().getConfigDir();
-        ModConfig config = TemplateMod.initialize(new RuntimePlatform("fabric", configDir));
+        ModConfig config = DimToggleMod.initialize(new RuntimePlatform("fabric", configDir));
         FabricDimensionControl.initialize(config, configDir);
     }
 }
@@ -1941,7 +1941,7 @@ public final class Entrypoint implements ModInitializer {
 def generate_forge_entrypoint(mc: str) -> str:
     return """package dev.kyroxova.dimtoggle.forge;
 
-import dev.kyroxova.dimtoggle.TemplateMod;
+import dev.kyroxova.dimtoggle.DimToggleMod;
 import dev.kyroxova.dimtoggle.platform.RuntimePlatform;
 import dev.kyroxova.dimtoggle.config.ModConfig;
 import net.minecraftforge.common.MinecraftForge;
@@ -1949,12 +1949,12 @@ import java.nio.file.Path;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 
-@Mod(TemplateMod.MOD_ID)
+@Mod(DimToggleMod.MOD_ID)
 public final class Entrypoint {
     public Entrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
         LegacyConfigMigration.migrate(configDir);
-        ModConfig config = TemplateMod.initialize(new RuntimePlatform("forge", configDir));
+        ModConfig config = DimToggleMod.initialize(new RuntimePlatform("forge", configDir));
         MinecraftForge.EVENT_BUS.register(new ForgeDimensionControl(config, configDir));
     }
 }
@@ -1963,7 +1963,7 @@ public final class Entrypoint {
 def generate_neoforge_entrypoint(mc: str) -> str:
     return """package dev.kyroxova.dimtoggle.neoforge;
 
-import dev.kyroxova.dimtoggle.TemplateMod;
+import dev.kyroxova.dimtoggle.DimToggleMod;
 import dev.kyroxova.dimtoggle.platform.RuntimePlatform;
 import dev.kyroxova.dimtoggle.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
@@ -1971,12 +1971,12 @@ import java.nio.file.Path;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
 
-@Mod(TemplateMod.MOD_ID)
+@Mod(DimToggleMod.MOD_ID)
 public final class Entrypoint {
     public Entrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
         LegacyConfigMigration.migrate(configDir);
-        ModConfig config = TemplateMod.initialize(new RuntimePlatform("neoforge", configDir));
+        ModConfig config = DimToggleMod.initialize(new RuntimePlatform("neoforge", configDir));
         NeoForge.EVENT_BUS.register(new NeoForgeDimensionControl(config, configDir));
     }
 }

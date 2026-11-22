@@ -5,12 +5,12 @@ import dev.kyroxova.dimtoggle.platform.Platform;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-public final class TemplateMod {
+public final class DimToggleMod {
     public static final String MOD_ID = "dimtoggle";
     private static final Logger LOG = Logger.getLogger(MOD_ID);
     private static ModConfig config;
 
-    private TemplateMod() { }
+    private DimToggleMod() { }
 
     public static ModConfig initialize(Platform platform) {
         try {

@@ -50,34 +50,36 @@ def write_new(path, text):
 
 def scaffold(version, loader):
     base = ROOT / 'versions' / version / loader / 'src/main'
-    package = 'dev.example.examplemod'
+    from template import properties
+    metadata = properties(ROOT / 'properties/mod.properties')
+    package = metadata['mod.group'] + '.' + metadata['mod.id']
     if loader == 'fabric':
         imports = 'import net.fabricmc.api.ModInitializer;\nimport net.fabricmc.loader.api.FabricLoader;'
         declaration = 'public final class Entrypoint implements ModInitializer'
-        body = 'public void onInitialize() {\n        TemplateMod.initialize(new RuntimePlatform("fabric", FabricLoader.getInstance().getConfigDir()));\n    }'
-        metadata = '''{
+        body = 'public void onInitialize() {\n        DimToggleMod.initialize(new RuntimePlatform("fabric", FabricLoader.getInstance().getConfigDir()));\n    }'
+        metadata_str = f'''{{
   "schemaVersion": 1,
-  "id": "${mod_id}",
-  "version": "${mod_version}",
-  "name": "${mod_name}",
-  "description": "${mod_description}",
-  "license": "${mod_license}",
+  "id": "${{mod_id}}",
+  "version": "${{mod_version}}",
+  "name": "${{mod_name}}",
+  "description": "${{mod_description}}",
+  "license": "${{mod_license}}",
   "environment": "*",
-  "entrypoints": { "main": ["dev.example.examplemod.fabric.Entrypoint"] },
-  "depends": { "fabricloader": ">=${loader_version}", "minecraft": "${minecraft_version}", "java": ">=${java_release}" }
-}
+  "entrypoints": {{ "main": ["{package}.fabric.Entrypoint"] }},
+  "depends": {{ "fabricloader": ">=${{loader_version}}", "minecraft": "${{minecraft_version}}", "java": ">=${{java_release}}" }}
+}}
 '''
-        write_new(base / 'resources/fabric.mod.json', metadata)
+        write_new(base / 'resources/fabric.mod.json', metadata_str)
     else:
         namespace = 'net.minecraftforge' if loader == 'forge' else 'net.neoforged'
         imports = f'import {namespace}.fml.common.Mod;\nimport {namespace}.fml.loading.FMLPaths;'
-        declaration = '@Mod(TemplateMod.MOD_ID)\npublic final class Entrypoint'
-        body = f'public Entrypoint() {{\n        TemplateMod.initialize(new RuntimePlatform("{loader}", FMLPaths.CONFIGDIR.get()));\n    }}'
+        declaration = '@Mod(DimToggleMod.MOD_ID)\npublic final class Entrypoint'
+        body = f'public Entrypoint() {{\n        DimToggleMod.initialize(new RuntimePlatform("{loader}", FMLPaths.CONFIGDIR.get()));\n    }}'
         neo_modern = loader == 'neoforge' and numeric(version) >= (1, 20, 5)
         filename = 'neoforge.mods.toml' if neo_modern else 'mods.toml'
         dependency_id = loader
         required = 'type="required"' if neo_modern else 'mandatory=true'
-        metadata = f'''modLoader="javafml"
+        metadata_str = f'''modLoader="javafml"
 loaderVersion="[1,)"
 license="${{mod_license}}"
 [[mods]]
@@ -98,10 +100,10 @@ versionRange="[${{minecraft_version}}]"
 ordering="NONE"
 side="BOTH"
 '''
-        write_new(base / 'resources/META-INF' / filename, metadata)
+        write_new(base / 'resources/META-INF' / filename, metadata_str)
     source = f'''package {package}.{loader};
 
-import {package}.TemplateMod;
+import {package}.DimToggleMod;
 import {package}.platform.RuntimePlatform;
 {imports}
 
@@ -109,7 +111,7 @@ import {package}.platform.RuntimePlatform;
     {body}
 }}
 '''
-    write_new(base / 'java/dev/example/examplemod' / loader / 'Entrypoint.java', source)
+    write_new(base / 'java' / Path(package.replace('.', '/')) / loader / 'Entrypoint.java', source)
 
 def refresh():
     manifest_url = 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json'
