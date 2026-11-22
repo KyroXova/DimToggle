@@ -1,0 +1,73 @@
+name: Build and test
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ main, dev/** ]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate matrix
+        run: python tools/kyro/template.py validate
+      - name: Test tools and storage
+        run: |
+          python tools/kyro/test_tools.py
+          python tools/kyro/test_storage.py
+      - name: Core build and unit tests
+        run: python tools/kyro/template.py core
+
+  build-representative-targets:
+    needs: validate-and-test
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mc: '1.18.2'
+            loader: 'fabric'
+          - mc: '1.18.2'
+            loader: 'forge'
+          - mc: '1.20.1'
+            loader: 'fabric'
+          - mc: '1.20.1'
+            loader: 'forge'
+          - mc: '1.20.4'
+            loader: 'neoforge'
+          - mc: '1.21.1'
+            loader: 'fabric'
+          - mc: '1.21.1'
+            loader: 'neoforge'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            17
+            21
+            25
+      - name: Build target artifact
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.mc }}-${{ matrix.loader }}
+          path: build/${{ matrix.mc }}/${{ matrix.loader }}/libs/*.jar
+          if-no-files-found: ignore
