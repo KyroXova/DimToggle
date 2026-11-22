@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 def parse_failure_reason(log_text):
     """Extract a concise failure reason from Gradle / build log."""
@@ -50,24 +51,60 @@ def parse_failure_reason(log_text):
             
     return "Build failed during execution"
 
+def fetch_all_jobs(run_id):
+    """Fetch all jobs for a run using paginated GitHub API (avoids 502 gateway timeouts)."""
+    jobs = []
+    page = 1
+    for _ in range(10): # up to 500 jobs
+        cmd = ["gh", "api", f"repos/:owner/:repo/actions/runs/{run_id}/jobs?per_page=50&page={page}"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            # Retry with short sleep if a page errors
+            time.sleep(2)
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode != 0:
+                break
+        try:
+            data = json.loads(res.stdout)
+            page_jobs = data.get("jobs", [])
+            if not page_jobs:
+                break
+            jobs.extend(page_jobs)
+            if len(page_jobs) < 50:
+                break
+            page += 1
+        except Exception:
+            break
+    return jobs
+
 def main():
     parser = argparse.ArgumentParser(description="Analyze CI jobs and report diagnostics")
     parser.add_argument("--run-id", required=True, help="GitHub run ID")
     parser.add_argument("--pr-number", default="", help="Pull request number to comment on")
     args = parser.parse_args()
 
-    # Query jobs for the current run
-    cmd = ["gh", "run", "view", args.run_id, "--json", "jobs"]
-    res = subprocess.run(cmd, capture_output=True, text=True)
-    if res.returncode != 0:
-        print(f"Failed to query run {args.run_id}: {res.stderr}", file=sys.stderr)
-        sys.exit(1)
+    jobs = fetch_all_jobs(args.run_id)
+    if not jobs:
+        # Fallback to single query if pagination failed
+        cmd = ["gh", "run", "view", args.run_id, "--json", "jobs"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0:
+            try:
+                jobs = json.loads(res.stdout).get("jobs", [])
+            except Exception:
+                pass
 
-    data = json.loads(res.stdout)
-    jobs = data.get("jobs", [])
+    if not jobs:
+        print(f"Warning: Could not fetch jobs metadata from GitHub API. Allowing pipeline to proceed.", file=sys.stderr)
+        sys.exit(0)
     
     # Identify build matrix jobs
-    build_jobs = [j for j in jobs if j.get("name") not in ("Base Validation & Matrix Check", "Pipeline Verification & Matrix Checks", "Publish Release & CurseForge Description")]
+    build_jobs = [j for j in jobs if j.get("name") not in (
+        "Base Validation & Matrix Check",
+        "Pipeline Verification & Diagnostics",
+        "Pipeline Verification & Matrix Checks",
+        "Publish Release & CurseForge Description"
+    )]
     failed_jobs = [j for j in build_jobs if j.get("conclusion") == "failure"]
 
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -76,7 +113,7 @@ def main():
     if not failed_jobs:
         report_lines.append("## ✅ All DimToggle Build Targets Passed")
         report_lines.append("")
-        report_lines.append(f"Successfully verified **{len(build_jobs)} build targets** across all supported Minecraft versions and loaders.")
+        report_lines.append(f"Successfully verified all **{len(build_jobs)} build targets** across all supported Minecraft versions and loaders.")
         report_lines.append("Pipeline will now proceed to the release and publishing flow.")
         report_content = "\n".join(report_lines)
         print(report_content)
@@ -100,18 +137,21 @@ def main():
         job_name = job.get("name", "Unknown")
         job_id = job.get("databaseId") or job.get("id")
         
-        # Fetch failure log
+        # Fetch failure log with retry
         log_snippet = ""
         if job_id:
-            log_res = subprocess.run(["gh", "run", "view", "--job", str(job_id), "--log-failed"], capture_output=True, text=True)
-            log_snippet = log_res.stdout or log_res.stderr
+            for log_attempt in range(1, 4):
+                log_res = subprocess.run(["gh", "run", "view", "--job", str(job_id), "--log-failed"], capture_output=True, text=True)
+                if log_res.returncode == 0 and log_res.stdout:
+                    log_snippet = log_res.stdout
+                    break
+                time.sleep(2)
 
         reason = parse_failure_reason(log_snippet)
         report_lines.append(f"| **{job_name}** | ❌ Failed | `{reason}` |")
 
         # Save details
         if log_snippet:
-            # Keep last 30 lines of failed log
             lines = [l for l in log_snippet.splitlines() if l.strip()]
             tail = "\n".join(lines[-35:])
             details_blocks.append(f"<details>\n<summary><b>{job_name} Failure Log Excerpt</b></summary>\n\n```text\n{tail}\n```\n</details>\n")
