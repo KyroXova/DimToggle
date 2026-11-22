@@ -1,4 +1,7 @@
 apply plugin: (targetMinecraft.startsWith('26.') ? 'net.fabricmc.fabric-loom' : 'fabric-loom')
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+}
 dependencies {
     minecraft "com.mojang:minecraft:${targetMinecraft}"
     if (!targetMinecraft.startsWith('26.')) {
