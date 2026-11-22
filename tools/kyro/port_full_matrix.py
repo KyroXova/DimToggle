@@ -24,10 +24,16 @@ def is_212_or_later(mc: str) -> bool:
             return True
     return False
 
-def is_206_or_later(mc: str) -> bool:
+def is_210_or_later(mc: str) -> bool:
+    return mc.startswith("26.") or mc.startswith("1.21")
+
+def is_205_or_later(mc: str) -> bool:
     if mc.startswith("26.") or mc.startswith("1.21"): return True
-    if mc == "1.20.6": return True
+    if mc in ["1.20.5", "1.20.6"]: return True
     return False
+
+def is_206_or_later(mc: str) -> bool:
+    return is_205_or_later(mc)
 
 def get_pack_format(mc: str) -> tuple:
     if mc.startswith("1.16.0") or mc in ["1.16", "1.16.1"]: return (5, 5)
@@ -58,6 +64,8 @@ def generate_pack_mcmeta(mc: str) -> str:
 '''
 
 def generate_safespawn(mc: str) -> str:
+    if mc.startswith("26."):
+        return ""
     tier = get_tier(mc)
     is_212 = is_212_or_later(mc)
     
@@ -671,11 +679,14 @@ def generate_command_tree():
                 .then(Commands.literal("reload").executes(context -> reloadConfig(context.getSource())))"""
 
 def generate_forge_control(mc: str) -> str:
+    slowness_effect = "MobEffects.SLOWNESS" if is_205_or_later(mc) else "MobEffects.MOVEMENT_SLOWDOWN"
+    shield_sound = "SoundEvents.SHIELD_BLOCK.value()" if is_205_or_later(mc) else "SoundEvents.SHIELD_BLOCK"
+    teleport_sound = "SoundEvents.ENDERMAN_TELEPORT.value()" if is_205_or_later(mc) else "SoundEvents.ENDERMAN_TELEPORT"
     tier = get_tier(mc)
     is_212 = is_212_or_later(mc)
-    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
-    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
-    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
+    inv_getter = "player.inventory" if mc.startswith("1.16") else "player.getInventory()"
+    yaw_getter = "player.yRot" if mc.startswith("1.16") else "player.getYRot()"
+    pitch_getter = "player.xRot" if mc.startswith("1.16") else "player.getXRot()"
 
     level_getter = "player.getLevel()" if tier <= 3 or mc.startswith("1.19") else "player.serverLevel()"
     
@@ -686,9 +697,7 @@ def generate_forge_control(mc: str) -> str:
         send_failure = lambda source, msg: f'{source}.sendFailure(new TextComponent("{msg}"));'
         send_failure_expr = lambda source, expr: f'{source}.sendFailure(new TextComponent({expr}));'
         send_player_msg = lambda player, expr: f'{player}.sendMessage(new TextComponent({expr}), Util.NIL_UUID);'
-        broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastMessage(new TextComponent({expr}), ChatType.SYSTEM, Util.NIL_UUID);'
-        server_from_tick = "ServerLifecycleHooks.getCurrentServer()"
-        hooks_import = "import net.minecraftforge.server.ServerLifecycleHooks;\n"
+        broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent({expr}), Util.NIL_UUID);'
     elif mc.startswith("1.19"):
         chat_import = "import net.minecraft.network.chat.Component;"
         send_success = lambda source, msg, log: f'{source}.sendSuccess(Component.literal("{msg}"), {log});'
@@ -696,9 +705,7 @@ def generate_forge_control(mc: str) -> str:
         send_failure = lambda source, msg: f'{source}.sendFailure(Component.literal("{msg}"));'
         send_failure_expr = lambda source, expr: f'{source}.sendFailure(Component.literal({expr}));'
         send_player_msg = lambda player, expr: f'{player}.sendSystemMessage(Component.literal({expr}));'
-        broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastSystemMessage(Component.literal({expr}), false);'
-        server_from_tick = "ServerLifecycleHooks.getCurrentServer()"
-        hooks_import = "import net.minecraftforge.server.ServerLifecycleHooks;\n"
+        broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal({expr}));'
     else:
         chat_import = "import net.minecraft.network.chat.Component;"
         send_success = lambda source, msg, log: f'{source}.sendSuccess(() -> Component.literal("{msg}"), {log});'
@@ -706,13 +713,29 @@ def generate_forge_control(mc: str) -> str:
         send_failure = lambda source, msg: f'{source}.sendFailure(Component.literal("{msg}"));'
         send_failure_expr = lambda source, expr: f'{source}.sendFailure(Component.literal({expr}));'
         send_player_msg = lambda player, expr: f'{player}.sendSystemMessage(Component.literal({expr}));'
-        broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastSystemMessage(Component.literal({expr}), false);'
-        server_from_tick = "event.getServer()"
+        broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal({expr}));'
+    if tier <= 2:
+        server_starting_import = "import net.minecraftforge.fml.event.server.FMLServerStartingEvent;\\nimport net.minecraftforge.fml.event.server.FMLServerStoppedEvent;"
+        server_starting_event = "FMLServerStartingEvent"
+        server_stopped_event = "FMLServerStoppedEvent"
+        hooks_import = "import net.minecraftforge.fml.server.ServerLifecycleHooks;\\n"
+        server_from_tick = "ServerLifecycleHooks.getCurrentServer()"
+    elif tier == 3 or mc.startswith("1.19"):
+        server_starting_import = "import net.minecraftforge.event.server.ServerStartingEvent;\\nimport net.minecraftforge.event.server.ServerStoppedEvent;"
+        server_starting_event = "ServerStartingEvent"
+        server_stopped_event = "ServerStoppedEvent"
+        hooks_import = "import net.minecraftforge.server.ServerLifecycleHooks;\\n"
+        server_from_tick = "ServerLifecycleHooks.getCurrentServer()"
+    else:
+        server_starting_import = "import net.minecraftforge.event.server.ServerStartingEvent;\\nimport net.minecraftforge.event.server.ServerStoppedEvent;"
+        server_starting_event = "ServerStartingEvent"
+        server_stopped_event = "ServerStoppedEvent"
         hooks_import = ""
+        server_from_tick = "event.getServer()"
 
-    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
-    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
-    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
+    inv_getter = "player.inventory" if mc.startswith("1.16") else "player.getInventory()"
+    yaw_getter = "player.yRot" if mc.startswith("1.16") else "player.getYRot()"
+    pitch_getter = "player.xRot" if mc.startswith("1.16") else "player.getXRot()"
 
     if is_212:
         teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
@@ -724,14 +747,14 @@ def generate_forge_control(mc: str) -> str:
         teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
         teleport_bounce = f"player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
-    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
-    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
-    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
+    inv_getter = "player.inventory" if mc.startswith("1.16") else "player.getInventory()"
+    yaw_getter = "player.yRot" if mc.startswith("1.16") else "player.getYRot()"
+    pitch_getter = "player.xRot" if mc.startswith("1.16") else "player.getXRot()"
     dim_registry_ref = "net.minecraft.core.Registry.DIMENSION_REGISTRY" if (tier <= 3 or mc in ["1.19", "1.19.1", "1.19.2"]) else "net.minecraft.core.registries.Registries.DIMENSION"
-    res_loc = "ResourceLocation.parse(dimension)" if is_206_or_later(mc) else "new ResourceLocation(dimension)"
+    res_loc = "ResourceLocation.parse(dimension)" if is_210_or_later(mc) else "new ResourceLocation(dimension)"
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=False)
     command_tree = generate_command_tree()
-    res_loc = "ResourceLocation.parse(dimension)" if is_206_or_later(mc) else "new ResourceLocation(dimension)"
+    res_loc = "ResourceLocation.parse(dimension)" if is_210_or_later(mc) else "new ResourceLocation(dimension)"
 
     return f"""package dev.kyroxova.dimtoggle.forge;
 
@@ -778,8 +801,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+{server_starting_import}
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 {hooks_import}
 public final class ForgeDimensionControl {{
@@ -993,9 +1015,9 @@ public final class ForgeDimensionControl {{
             {teleport_bounce}
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
-            player.playNotifySound(SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0f, 0.6f);
-            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
+            player.addEffect(new MobEffectInstance({slowness_effect}, 45, 3, false, false, true));
+            player.playNotifySound({shield_sound}, SoundSource.PLAYERS, 1.0f, 0.6f);
+            player.playNotifySound({teleport_sound}, SoundSource.PLAYERS, 0.8f, 0.5f);
             try {{
                 {level_getter}.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 {level_getter}.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
@@ -1083,7 +1105,10 @@ public final class ForgeDimensionControl {{
 """
 
 def generate_neoforge_control(mc: str) -> str:
-    is_206_plus = is_206_or_later(mc)
+    slowness_effect = "MobEffects.SLOWNESS" if is_205_or_later(mc) else "MobEffects.MOVEMENT_SLOWDOWN"
+    shield_sound = "SoundEvents.SHIELD_BLOCK.value()" if is_205_or_later(mc) else "SoundEvents.SHIELD_BLOCK"
+    teleport_sound = "SoundEvents.ENDERMAN_TELEPORT.value()" if is_205_or_later(mc) else "SoundEvents.ENDERMAN_TELEPORT"
+    is_205_plus = is_205_or_later(mc)
     is_212 = is_212_or_later(mc)
     inv_getter = "player.getInventory()"
     yaw_getter = "player.getYRot()"
@@ -1093,10 +1118,10 @@ def generate_neoforge_control(mc: str) -> str:
     send_success_expr = lambda source, expr, log: f'{source}.sendSuccess(() -> Component.literal({expr}), {log});'
     send_failure_expr = lambda source, expr: f'{source}.sendFailure(Component.literal({expr}));'
     send_player_msg = lambda player, expr: f'{player}.sendSystemMessage(Component.literal({expr}));'
-    broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastSystemMessage(Component.literal({expr}), false);'
+    broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal({expr}));'
     send_success = lambda source, msg, log: f'{source}.sendSuccess(() -> Component.literal("{msg}"), {log});'
 
-    if is_206_plus:
+    if is_205_plus:
         tick_import = "import net.neoforged.neoforge.event.tick.ServerTickEvent;"
         tick_method = """    @SubscribeEvent
     public void tick(ServerTickEvent.Post event) {
@@ -1157,7 +1182,7 @@ def generate_neoforge_control(mc: str) -> str:
 
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=False)
     command_tree = generate_command_tree()
-    res_loc = "ResourceLocation.parse(dimension)" if is_206_or_later(mc) else "new ResourceLocation(dimension)"
+    res_loc = "ResourceLocation.parse(dimension)" if is_210_or_later(mc) else "new ResourceLocation(dimension)"
 
     return f"""package dev.kyroxova.dimtoggle.neoforge;
 
@@ -1419,9 +1444,9 @@ public final class NeoForgeDimensionControl {{
             {teleport_bounce}
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
-            player.playNotifySound(SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0f, 0.6f);
-            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
+            player.addEffect(new MobEffectInstance({slowness_effect}, 45, 3, false, false, true));
+            player.playNotifySound({shield_sound}, SoundSource.PLAYERS, 1.0f, 0.6f);
+            player.playNotifySound({teleport_sound}, SoundSource.PLAYERS, 0.8f, 0.5f);
             try {{
                 {level_getter}.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 {level_getter}.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
@@ -1481,11 +1506,14 @@ public final class NeoForgeDimensionControl {{
 """
 
 def generate_fabric_control(mc: str) -> str:
+    slowness_effect = "MobEffects.SLOWNESS" if is_205_or_later(mc) else "MobEffects.MOVEMENT_SLOWDOWN"
+    shield_sound = "SoundEvents.SHIELD_BLOCK.value()" if is_205_or_later(mc) else "SoundEvents.SHIELD_BLOCK"
+    teleport_sound = "SoundEvents.ENDERMAN_TELEPORT.value()" if is_205_or_later(mc) else "SoundEvents.ENDERMAN_TELEPORT"
     tier = get_tier(mc)
     is_212 = is_212_or_later(mc)
-    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
-    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
-    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
+    inv_getter = "player.inventory" if mc.startswith("1.16") else "player.getInventory()"
+    yaw_getter = "player.yRot" if mc.startswith("1.16") else "player.getYRot()"
+    pitch_getter = "player.xRot" if mc.startswith("1.16") else "player.getXRot()"
 
     level_getter = "player.getLevel()" if tier <= 3 or mc.startswith("1.19") else "player.serverLevel()"
     command_callback = "net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback" if tier <= 3 else "net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback"
@@ -1498,7 +1526,7 @@ def generate_fabric_control(mc: str) -> str:
         send_failure = lambda source, msg: f'{source}.sendFailure(new TextComponent("{msg}"));'
         send_failure_expr = lambda source, expr: f'{source}.sendFailure(new TextComponent({expr}));'
         send_player_msg = lambda player, expr: f'{player}.sendMessage(new TextComponent({expr}), Util.NIL_UUID);'
-        broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastMessage(new TextComponent({expr}), ChatType.SYSTEM, Util.NIL_UUID);'
+        broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent({expr}), Util.NIL_UUID);'
     elif mc.startswith("1.19"):
         chat_import = "import net.minecraft.network.chat.Component;"
         send_success = lambda source, msg, log: f'{source}.sendSuccess(Component.literal("{msg}"), {log});'
@@ -1506,7 +1534,7 @@ def generate_fabric_control(mc: str) -> str:
         send_failure = lambda source, msg: f'{source}.sendFailure(Component.literal("{msg}"));'
         send_failure_expr = lambda source, expr: f'{source}.sendFailure(Component.literal({expr}));'
         send_player_msg = lambda player, expr: f'{player}.sendSystemMessage(Component.literal({expr}));'
-        broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastSystemMessage(Component.literal({expr}), false);'
+        broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal({expr}));'
     else:
         chat_import = "import net.minecraft.network.chat.Component;"
         send_success = lambda source, msg, log: f'{source}.sendSuccess(() -> Component.literal("{msg}"), {log});'
@@ -1514,7 +1542,7 @@ def generate_fabric_control(mc: str) -> str:
         send_failure = lambda source, msg: f'{source}.sendFailure(Component.literal("{msg}"));'
         send_failure_expr = lambda source, expr: f'{source}.sendFailure(Component.literal({expr}));'
         send_player_msg = lambda player, expr: f'{player}.sendSystemMessage(Component.literal({expr}));'
-        broadcast_msg = lambda server, expr: f'{server}.getPlayerList().broadcastSystemMessage(Component.literal({expr}), false);'
+        broadcast_msg = lambda server, expr: f'for (ServerPlayer _p : {server}.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal({expr}));'
 
     if is_212:
         teleport_spawn = f"player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
@@ -1530,7 +1558,7 @@ def generate_fabric_control(mc: str) -> str:
     command_tree = generate_command_tree()
 
     dimension_registry_ref = "net.minecraft.core.Registry.DIMENSION_REGISTRY" if (tier <= 3 or mc in ["1.19", "1.19.1", "1.19.2"]) else "net.minecraft.core.registries.Registries.DIMENSION"
-    res_loc = "ResourceLocation.parse(dimension)" if is_206_or_later(mc) else "new ResourceLocation(dimension)"
+    res_loc = "ResourceLocation.parse(dimension)" if is_210_or_later(mc) else "new ResourceLocation(dimension)"
 
     return f"""package dev.kyroxova.dimtoggle.fabric;
 
@@ -1771,9 +1799,9 @@ public final class FabricDimensionControl {{
             {teleport_bounce}
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
-            player.playNotifySound(SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0f, 0.6f);
-            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
+            player.addEffect(new MobEffectInstance({slowness_effect}, 45, 3, false, false, true));
+            player.playNotifySound({shield_sound}, SoundSource.PLAYERS, 1.0f, 0.6f);
+            player.playNotifySound({teleport_sound}, SoundSource.PLAYERS, 0.8f, 0.5f);
             try {{
                 {level_getter}.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 {level_getter}.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
@@ -2010,7 +2038,50 @@ def apply_all():
         mc = target["minecraft"]
         loaders = target["loaders"].keys()
 
-        # Common SafeSpawn
+        if mc.startswith("26."):
+            # Future mock version - minimal entrypoints without Minecraft classes
+            sp = ROOT / f"versions/{mc}/common/src/main/java/dev/kyroxova/dimtoggle/SafeSpawn.java"
+            if sp.exists(): sp.unlink()
+
+            if "fabric" in loaders:
+                write_if_changed(ROOT / f"versions/{mc}/fabric/src/main/java/dev/kyroxova/dimtoggle/fabric/Entrypoint.java", generate_fabric_entrypoint(mc))
+                fc = ROOT / f"versions/{mc}/fabric/src/main/java/dev/kyroxova/dimtoggle/fabric/FabricDimensionControl.java"
+                if fc.exists(): fc.unlink()
+                mx = ROOT / f"versions/{mc}/fabric/src/main/java/dev/kyroxova/dimtoggle/fabric/mixin/ServerPlayerMixin.java"
+                if mx.exists(): mx.unlink()
+                mj = ROOT / f"versions/{mc}/fabric/src/main/resources/dimtoggle.mixins.json"
+                if mj.exists(): mj.unlink()
+                fmod = ROOT / f"versions/{mc}/fabric/src/main/resources/fabric.mod.json"
+                write_if_changed(fmod, f'''{{
+  "schemaVersion": 1,
+  "id": "${{mod_id}}",
+  "version": "${{mod_version}}",
+  "name": "${{mod_name}}",
+  "description": "${{mod_description}}",
+  "license": "${{mod_license}}",
+  "environment": "*",
+  "entrypoints": {{ "main": ["dev.kyroxova.dimtoggle.fabric.Entrypoint"] }},
+  "depends": {{ "fabricloader": ">=${{loader_version}}", "minecraft": "{mc}", "java": ">=${{java_release}}" }}
+}}
+''')
+                write_if_changed(ROOT / f"versions/{mc}/fabric/src/main/resources/pack.mcmeta", generate_pack_mcmeta(mc))
+
+            if "forge" in loaders:
+                write_if_changed(ROOT / f"versions/{mc}/forge/src/main/java/dev/kyroxova/dimtoggle/forge/Entrypoint.java", generate_forge_entrypoint(mc))
+                write_if_changed(ROOT / f"versions/{mc}/forge/src/main/java/dev/kyroxova/dimtoggle/forge/LegacyConfigMigration.java", generate_legacy_migration(mc, "forge"))
+                fc = ROOT / f"versions/{mc}/forge/src/main/java/dev/kyroxova/dimtoggle/forge/ForgeDimensionControl.java"
+                if fc.exists(): fc.unlink()
+                write_if_changed(ROOT / f"versions/{mc}/forge/src/main/resources/pack.mcmeta", generate_pack_mcmeta(mc))
+
+            if "neoforge" in loaders:
+                write_if_changed(ROOT / f"versions/{mc}/neoforge/src/main/java/dev/kyroxova/dimtoggle/neoforge/Entrypoint.java", generate_neoforge_entrypoint(mc))
+                write_if_changed(ROOT / f"versions/{mc}/neoforge/src/main/java/dev/kyroxova/dimtoggle/neoforge/LegacyConfigMigration.java", generate_legacy_migration(mc, "neoforge"))
+                fc = ROOT / f"versions/{mc}/neoforge/src/main/java/dev/kyroxova/dimtoggle/neoforge/NeoForgeDimensionControl.java"
+                if fc.exists(): fc.unlink()
+                write_if_changed(ROOT / f"versions/{mc}/neoforge/src/main/resources/pack.mcmeta", generate_pack_mcmeta(mc))
+            continue
+
+        # Real Minecraft targets
         write_if_changed(ROOT / f"versions/{mc}/common/src/main/java/dev/kyroxova/dimtoggle/SafeSpawn.java", generate_safespawn(mc))
 
         # Fabric
@@ -2062,9 +2133,16 @@ def apply_all():
         # Forge
         if "forge" in loaders:
             forge_dir = ROOT / f"versions/{mc}/forge"
-            write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/ForgeDimensionControl.java", generate_forge_control(mc))
-            write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/Entrypoint.java", generate_forge_entrypoint(mc))
-            write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/LegacyConfigMigration.java", generate_legacy_migration(mc, "forge"))
+            if mc in ["1.16.1", "1.16.2", "1.16.3", "1.16.4"]:
+                # Early Forge before official Mojmap support
+                write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/Entrypoint.java", generate_forge_entrypoint(mc))
+                write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/LegacyConfigMigration.java", generate_legacy_migration(mc, "forge"))
+                fc = forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/ForgeDimensionControl.java"
+                if fc.exists(): fc.unlink()
+            else:
+                write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/ForgeDimensionControl.java", generate_forge_control(mc))
+                write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/Entrypoint.java", generate_forge_entrypoint(mc))
+                write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/LegacyConfigMigration.java", generate_legacy_migration(mc, "forge"))
             write_if_changed(forge_dir / "src/main/resources/pack.mcmeta", generate_pack_mcmeta(mc))
 
         # NeoForge

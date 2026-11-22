@@ -45,11 +45,9 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;\nimport net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.server.ServerLifecycleHooks;
-
+import net.minecraftforge.fml.server.ServerLifecycleHooks;\n
 public final class ForgeDimensionControl {
     private static final Logger LOG = Logger.getLogger("dimtoggle");
     private final Path configDir;
@@ -315,7 +313,7 @@ public final class ForgeDimensionControl {
         long now = System.currentTimeMillis();
         try {
             for (String dimension : locks.expire(now)) {
-                server.getPlayerList().broadcastMessage(new TextComponent("§aDimension unlocked: §f" + dimension), ChatType.SYSTEM, Util.NIL_UUID);
+                for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§aDimension unlocked: §f" + dimension), Util.NIL_UUID);
             }
         } catch (IOException exception) {
             LOG.severe("Failed to persist expired locks: " + exception.getMessage());
@@ -327,7 +325,7 @@ public final class ForgeDimensionControl {
                     String key = entry.getKey() + ":" + remSec;
                     if (announcedWarnings.add(key)) {
                         String timeStr = remSec >= 60 ? (remSec / 60) + " minutes" : remSec + " seconds";
-                        server.getPlayerList().broadcastMessage(new TextComponent("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), ChatType.SYSTEM, Util.NIL_UUID);
+                        for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), Util.NIL_UUID);
                     }
                 }
             }
@@ -531,7 +529,7 @@ public final class ForgeDimensionControl {
                 source.sendFailure(new TextComponent("§cDimension is not locked: " + dimension));
                 return 0;
             }
-            source.getServer().getPlayerList().broadcastMessage(new TextComponent("§aDimension unlocked: §f" + dimension), ChatType.SYSTEM, Util.NIL_UUID);
+            for (ServerPlayer _p : source.getServer().getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§aDimension unlocked: §f" + dimension), Util.NIL_UUID);
             return 1;
         } catch (IOException exception) {
             source.sendFailure(new TextComponent("§cCould not persist lock update: " + exception.getMessage()));

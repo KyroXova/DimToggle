@@ -43,8 +43,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;\nimport net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public final class ForgeDimensionControl {
@@ -258,9 +257,9 @@ public final class ForgeDimensionControl {
             player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
-            player.playNotifySound(SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0f, 0.6f);
-            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
+            player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 45, 3, false, false, true));
+            player.playNotifySound(SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 1.0f, 0.6f);
+            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT.value(), SoundSource.PLAYERS, 0.8f, 0.5f);
             try {
                 player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
@@ -312,7 +311,7 @@ public final class ForgeDimensionControl {
         long now = System.currentTimeMillis();
         try {
             for (String dimension : locks.expire(now)) {
-                server.getPlayerList().broadcastSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension), false);
+                for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension));
             }
         } catch (IOException exception) {
             LOG.severe("Failed to persist expired locks: " + exception.getMessage());
@@ -324,7 +323,7 @@ public final class ForgeDimensionControl {
                     String key = entry.getKey() + ":" + remSec;
                     if (announcedWarnings.add(key)) {
                         String timeStr = remSec >= 60 ? (remSec / 60) + " minutes" : remSec + " seconds";
-                        server.getPlayerList().broadcastSystemMessage(Component.literal("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), false);
+                        for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"));
                     }
                 }
             }
@@ -528,7 +527,7 @@ public final class ForgeDimensionControl {
                 source.sendFailure(Component.literal("§cDimension is not locked: " + dimension));
                 return 0;
             }
-            source.getServer().getPlayerList().broadcastSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension), false);
+            for (ServerPlayer _p : source.getServer().getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension));
             return 1;
         } catch (IOException exception) {
             source.sendFailure(Component.literal("§cCould not persist lock update: " + exception.getMessage()));
