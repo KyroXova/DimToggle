@@ -2082,7 +2082,12 @@ def apply_all():
             continue
 
         # Real Minecraft targets
-        write_if_changed(ROOT / f"versions/{mc}/common/src/main/java/dev/kyroxova/dimtoggle/SafeSpawn.java", generate_safespawn(mc))
+        if mc in ["1.16.1", "1.16.2", "1.16.3", "1.16.4"]:
+            sp_common = ROOT / f"versions/{mc}/common/src/main/java/dev/kyroxova/dimtoggle/SafeSpawn.java"
+            if sp_common.exists(): sp_common.unlink()
+            write_if_changed(ROOT / f"versions/{mc}/fabric/src/main/java/dev/kyroxova/dimtoggle/SafeSpawn.java", generate_safespawn(mc))
+        else:
+            write_if_changed(ROOT / f"versions/{mc}/common/src/main/java/dev/kyroxova/dimtoggle/SafeSpawn.java", generate_safespawn(mc))
 
         # Fabric
         if "fabric" in loaders:
