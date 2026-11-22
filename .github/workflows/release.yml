@@ -104,45 +104,29 @@ jobs:
           echo "github_release_exists=${GITHUB_RELEASE_EXISTS}" >> "$GITHUB_OUTPUT"
           echo "release_commit_sha=${RELEASE_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
 
+  matrix-generator:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        shell: python
+        run: |
+          import json, os
+          targets = json.load(open('targets.json'))['targets']
+          matrix = {'include': [{'mc': t['minecraft'], 'loader': loader} for t in targets for loader in t['loaders']]}
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('matrix=' + json.dumps(matrix) + '\n')
+
   build-release-matrix:
-    needs: check-version
+    needs: [check-version, matrix-generator]
     if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      max-parallel: 8
-      matrix:
-        include:
-          - mc: '1.18.2'
-            loader: 'fabric'
-          - mc: '1.18.2'
-            loader: 'forge'
-          - mc: '1.19.2'
-            loader: 'fabric'
-          - mc: '1.19.2'
-            loader: 'forge'
-          - mc: '1.20.1'
-            loader: 'fabric'
-          - mc: '1.20.1'
-            loader: 'forge'
-          - mc: '1.20.4'
-            loader: 'fabric'
-          - mc: '1.20.4'
-            loader: 'forge'
-          - mc: '1.20.4'
-            loader: 'neoforge'
-          - mc: '1.21.1'
-            loader: 'fabric'
-          - mc: '1.21.1'
-            loader: 'forge'
-          - mc: '1.21.1'
-            loader: 'neoforge'
-          - mc: '1.21.4'
-            loader: 'fabric'
-          - mc: '1.21.4'
-            loader: 'forge'
-          - mc: '1.21.4'
-            loader: 'neoforge'
+      max-parallel: 16
+      matrix: ${{ fromJSON(needs.matrix-generator.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -161,6 +145,7 @@ jobs:
           distribution: 'temurin'
           java-version: |
             8
+            16
             17
             21
             25
@@ -168,6 +153,7 @@ jobs:
       - name: Configure Java environment variables
         run: |
           echo "JAVA_8_HOME=$JAVA_HOME_8_X64" >> "$GITHUB_ENV"
+          echo "JAVA_16_HOME=$JAVA_HOME_16_X64" >> "$GITHUB_ENV"
           echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
           echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
