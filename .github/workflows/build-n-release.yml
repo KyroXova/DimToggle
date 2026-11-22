@@ -96,7 +96,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -135,7 +135,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -180,7 +180,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -233,7 +233,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -304,7 +304,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -407,7 +407,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -470,7 +470,7 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:

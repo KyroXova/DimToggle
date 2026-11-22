@@ -45,8 +45,8 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 public final class ForgeDimensionControl {
     private static final Logger LOG = Logger.getLogger("dimtoggle");
@@ -64,7 +64,7 @@ public final class ForgeDimensionControl {
     }
 
     @SubscribeEvent
-    public void start(ServerStartingEvent event) {
+    public void start(FMLServerStartingEvent event) {
         this.currentServer = event.getServer();
         Path path = this.currentServer.getWorldPath(LevelResource.ROOT).resolve("data/dimtoggle-locks.json");
         try {
@@ -75,7 +75,7 @@ public final class ForgeDimensionControl {
     }
 
     @SubscribeEvent
-    public void stop(ServerStoppedEvent event) {
+    public void stop(FMLServerStoppedEvent event) {
         this.currentServer = null;
         locks = null;
         lastDenial.clear();

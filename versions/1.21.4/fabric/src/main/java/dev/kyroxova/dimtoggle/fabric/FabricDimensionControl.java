@@ -311,9 +311,9 @@ public final class FabricDimensionControl {
             player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
-            player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 45, 3, false, false, true));
-            player.playNotifySound(SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 1.0f, 0.6f);
-            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT.value(), SoundSource.PLAYERS, 0.8f, 0.5f);
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
+            player.playNotifySound(SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0f, 0.6f);
+            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
             try {
                 player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);

@@ -11,9 +11,6 @@
       "dev.kyroxova.dimtoggle.fabric.Entrypoint"
     ]
   },
-  "mixins": [
-    "dimtoggle.mixins.json"
-  ],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "1.21.11"
