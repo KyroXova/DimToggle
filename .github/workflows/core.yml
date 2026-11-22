@@ -1,0 +1,41 @@
+name: Core Validation
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ main, dev/** ]
+
+jobs:
+  validate:
+    name: Matrix Validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate target matrix and metadata
+        run: python tools/kyro/template.py validate
+      - name: Test tools and storage
+        run: |
+          python tools/kyro/test_tools.py
+          python tools/kyro/test_storage.py
+
+  core-tests:
+    name: Core Unit Tests
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Configure Java environment
+        run: echo "JAVA_21_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+      - name: Execute core unit tests
+        run: python tools/kyro/template.py core

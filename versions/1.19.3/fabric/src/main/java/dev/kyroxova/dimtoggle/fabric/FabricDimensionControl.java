@@ -308,7 +308,7 @@ public final class FabricDimensionControl {
             double targetY = player.getY() + pushY;
             double targetZ = player.getZ() + pushZ;
 
-            player.teleportTo(player.getLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);
+            player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
@@ -329,7 +329,7 @@ public final class FabricDimensionControl {
                 if (player.getLevel() != spawnLevel && (locks == null || locks.isLocked("minecraft:overworld", System.currentTimeMillis()))) return;
                 BlockPos spawnPos = SafeSpawn.find(spawnLevel);
                 if (spawnPos == null) return;
-                player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());
+                player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});
             }
         });
     }

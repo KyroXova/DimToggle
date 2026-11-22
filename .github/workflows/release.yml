@@ -104,75 +104,144 @@ jobs:
           echo "github_release_exists=${GITHUB_RELEASE_EXISTS}" >> "$GITHUB_OUTPUT"
           echo "release_commit_sha=${RELEASE_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
 
-  matrix-generator:
-    runs-on: ubuntu-24.04
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: set-matrix
-        shell: python
-        run: |
-          import json, os
-          targets = json.load(open('targets.json'))['targets']
-          matrix = {'include': [{'mc': t['minecraft'], 'loader': loader} for t in targets for loader in t['loaders']]}
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
-              output.write('matrix=' + json.dumps(matrix) + '\n')
-
-  build-release-matrix:
-    needs: [check-version, matrix-generator]
+  fabric:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: check-version
     if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      max-parallel: 16
-      matrix: ${{ fromJSON(needs.matrix-generator.outputs.matrix) }}
+      matrix:
+        minecraft:
+          - '1.18.2'
+          - '1.19.2'
+          - '1.19.4'
+          - '1.20.1'
+          - '1.20.4'
+          - '1.21.1'
+          - '1.21.4'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: ${{ needs.check-version.outputs.release_commit_sha }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Set up JDK versions
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: |
-            8
-            16
             17
             21
             25
-
       - name: Configure Java environment variables
         run: |
-          echo "JAVA_8_HOME=$JAVA_HOME_8_X64" >> "$GITHUB_ENV"
-          echo "JAVA_16_HOME=$JAVA_HOME_16_X64" >> "$GITHUB_ENV"
           echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
           echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
-
-      - name: Make scripts executable
-        run: chmod +x gradlew modw
-
-      - name: Build target artifact
-        run: python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" build
-
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" build
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-jars-${{ matrix.mc }}-${{ matrix.loader }}
-          path: build/${{ matrix.mc }}/${{ matrix.loader }}/libs/*.jar
+          name: release-jars-fabric-${{ matrix.minecraft }}
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: error
+
+  forge:
+    name: Forge ${{ matrix.minecraft }}
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft:
+          - '1.18.2'
+          - '1.19.2'
+          - '1.19.4'
+          - '1.20.1'
+          - '1.20.4'
+          - '1.21.1'
+          - '1.21.4'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check-version.outputs.release_commit_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
+            25
+      - name: Configure Java environment variables
+        run: |
+          echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
+      - name: Build Forge ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=forge" build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-forge-${{ matrix.minecraft }}
+          path: build/${{ matrix.minecraft }}/forge/libs/*.jar
+          if-no-files-found: error
+
+  neoforge:
+    name: NeoForge ${{ matrix.minecraft }}
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft:
+          - '1.20.4'
+          - '1.20.6'
+          - '1.21.1'
+          - '1.21.4'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check-version.outputs.release_commit_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
+            25
+      - name: Configure Java environment variables
+        run: |
+          echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
+      - name: Build NeoForge ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=neoforge" build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-neoforge-${{ matrix.minecraft }}
+          path: build/${{ matrix.minecraft }}/neoforge/libs/*.jar
           if-no-files-found: error
 
   publish-release:
-    needs: [check-version, build-release-matrix]
+    name: Publish Release
+    needs: [check-version, fabric, forge, neoforge]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -203,6 +272,7 @@ jobs:
           files: release-artifacts/*.jar
 
   sync-description:
+    name: Sync CurseForge Description
     needs: [check-version, publish-release]
     if: needs.check-version.outputs.is_prerelease != 'true'
     uses: ./.github/workflows/sync-curseforge-description.yml

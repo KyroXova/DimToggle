@@ -673,6 +673,9 @@ def generate_command_tree():
 def generate_forge_control(mc: str) -> str:
     tier = get_tier(mc)
     is_212 = is_212_or_later(mc)
+    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
+    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
+    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
 
     level_getter = "player.getLevel()" if tier <= 3 or mc.startswith("1.19") else "player.serverLevel()"
     
@@ -707,16 +710,23 @@ def generate_forge_control(mc: str) -> str:
         server_from_tick = "event.getServer()"
         hooks_import = ""
 
+    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
+    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
+    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
+
     if is_212:
         teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
         teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
     elif tier <= 3 or mc.startswith("1.19"):
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());"
-        teleport_bounce = "player.teleportTo(player.getLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);"
+        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = "player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
     else:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);"
+        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
+    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
+    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
+    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
     dim_registry_ref = "net.minecraft.core.Registry.DIMENSION_REGISTRY" if (tier <= 3 or mc in ["1.19", "1.19.1", "1.19.2"]) else "net.minecraft.core.registries.Registries.DIMENSION"
     res_loc = "ResourceLocation.parse(dimension)" if is_206_or_later(mc) else "new ResourceLocation(dimension)"
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=False)
@@ -867,8 +877,8 @@ public final class ForgeDimensionControl {{
         if (player.hasPermissions(2) && config.allowOps) return true;
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return true;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {{
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < {inv_getter}.getContainerSize(); i++) {{
+            net.minecraft.world.item.ItemStack stack = {inv_getter}.getItem(i);
             if (!stack.isEmpty()) {{
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) return true;
@@ -925,8 +935,8 @@ public final class ForgeDimensionControl {{
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return;
         if (player.hasPermissions(2) && config.allowOps) return;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {{
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < {inv_getter}.getContainerSize(); i++) {{
+            net.minecraft.world.item.ItemStack stack = {inv_getter}.getItem(i);
             if (!stack.isEmpty()) {{
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) {{
@@ -964,14 +974,14 @@ public final class ForgeDimensionControl {{
             if (state.is(Blocks.NETHER_PORTAL)) {{
                 Direction.Axis axis = state.hasProperty(BlockStateProperties.HORIZONTAL_AXIS) ?
                     state.getValue(BlockStateProperties.HORIZONTAL_AXIS) : Direction.Axis.X;
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians({yaw_getter});
                 if (axis == Direction.Axis.X) {{
                     pushZ = -Math.cos(yawRad) >= 0 ? -2.5 : 2.5;
                 }} else {{
                     pushX = Math.sin(yawRad) >= 0 ? 2.5 : -2.5;
                 }}
             }} else {{
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians({yaw_getter});
                 pushX = Math.sin(yawRad) * 2.5;
                 pushZ = -Math.cos(yawRad) * 2.5;
             }}
@@ -1075,6 +1085,9 @@ public final class ForgeDimensionControl {{
 def generate_neoforge_control(mc: str) -> str:
     is_206_plus = is_206_or_later(mc)
     is_212 = is_212_or_later(mc)
+    inv_getter = "player.getInventory()"
+    yaw_getter = "player.getYRot()"
+    pitch_getter = "player.getXRot()"
 
     level_getter = "player.serverLevel()"
     send_success_expr = lambda source, expr, log: f'{source}.sendSuccess(() -> Component.literal({expr}), {log});'
@@ -1139,8 +1152,8 @@ def generate_neoforge_control(mc: str) -> str:
         teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
         teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
     else:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);"
+        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=False)
     command_tree = generate_command_tree()
@@ -1290,8 +1303,8 @@ public final class NeoForgeDimensionControl {{
         if (player.hasPermissions(2) && config.allowOps) return true;
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return true;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {{
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < {inv_getter}.getContainerSize(); i++) {{
+            net.minecraft.world.item.ItemStack stack = {inv_getter}.getItem(i);
             if (!stack.isEmpty()) {{
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) return true;
@@ -1348,8 +1361,8 @@ public final class NeoForgeDimensionControl {{
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return;
         if (player.hasPermissions(2) && config.allowOps) return;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {{
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < {inv_getter}.getContainerSize(); i++) {{
+            net.minecraft.world.item.ItemStack stack = {inv_getter}.getItem(i);
             if (!stack.isEmpty()) {{
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) {{
@@ -1387,14 +1400,14 @@ public final class NeoForgeDimensionControl {{
             if (state.is(Blocks.NETHER_PORTAL)) {{
                 Direction.Axis axis = state.hasProperty(BlockStateProperties.HORIZONTAL_AXIS) ?
                     state.getValue(BlockStateProperties.HORIZONTAL_AXIS) : Direction.Axis.X;
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians({yaw_getter});
                 if (axis == Direction.Axis.X) {{
                     pushZ = -Math.cos(yawRad) >= 0 ? -2.5 : 2.5;
                 }} else {{
                     pushX = Math.sin(yawRad) >= 0 ? 2.5 : -2.5;
                 }}
             }} else {{
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians({yaw_getter});
                 pushX = Math.sin(yawRad) * 2.5;
                 pushZ = -Math.cos(yawRad) * 2.5;
             }}
@@ -1470,6 +1483,9 @@ public final class NeoForgeDimensionControl {{
 def generate_fabric_control(mc: str) -> str:
     tier = get_tier(mc)
     is_212 = is_212_or_later(mc)
+    inv_getter = "player.inventory" if tier <= 2 else "player.getInventory()"
+    yaw_getter = "player.yRot" if tier <= 2 else "player.getYRot()"
+    pitch_getter = "player.xRot" if tier <= 2 else "player.getXRot()"
 
     level_getter = "player.getLevel()" if tier <= 3 or mc.startswith("1.19") else "player.serverLevel()"
     command_callback = "net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback" if tier <= 3 else "net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback"
@@ -1504,11 +1520,11 @@ def generate_fabric_control(mc: str) -> str:
         teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);"
         teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);"
     elif tier <= 3 or mc.startswith("1.19"):
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());"
-        teleport_bounce = "player.teleportTo(player.getLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);"
+        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = "player.teleportTo(player.getLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
     else:
-        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());"
-        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);"
+        teleport_spawn = "player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, {yaw_getter}, {pitch_getter});"
+        teleport_bounce = "player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, {yaw_getter}, -10.0f);"
 
     commands_impl = generate_commands_code(send_success_expr, send_failure_expr, broadcast_msg, send_success, send_player_msg, level_getter, is_static=True)
     command_tree = generate_command_tree()
@@ -1649,8 +1665,8 @@ public final class FabricDimensionControl {{
         if (player.hasPermissions(2) && config.allowOps) return true;
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return true;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {{
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < {inv_getter}.getContainerSize(); i++) {{
+            net.minecraft.world.item.ItemStack stack = {inv_getter}.getItem(i);
             if (!stack.isEmpty()) {{
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) return true;
@@ -1707,8 +1723,8 @@ public final class FabricDimensionControl {{
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return;
         if (player.hasPermissions(2) && config.allowOps) return;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {{
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < {inv_getter}.getContainerSize(); i++) {{
+            net.minecraft.world.item.ItemStack stack = {inv_getter}.getItem(i);
             if (!stack.isEmpty()) {{
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) {{
@@ -1736,14 +1752,14 @@ public final class FabricDimensionControl {{
             if (state.is(Blocks.NETHER_PORTAL)) {{
                 Direction.Axis axis = state.hasProperty(BlockStateProperties.HORIZONTAL_AXIS) ?
                     state.getValue(BlockStateProperties.HORIZONTAL_AXIS) : Direction.Axis.X;
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians({yaw_getter});
                 if (axis == Direction.Axis.X) {{
                     pushZ = -Math.cos(yawRad) >= 0 ? -2.5 : 2.5;
                 }} else {{
                     pushX = Math.sin(yawRad) >= 0 ? 2.5 : -2.5;
                 }}
             }} else {{
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians({yaw_getter});
                 pushX = Math.sin(yawRad) * 2.5;
                 pushZ = -Math.cos(yawRad) * 2.5;
             }}

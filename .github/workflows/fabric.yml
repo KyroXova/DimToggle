@@ -1,0 +1,237 @@
+name: Fabric Pipeline
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ main, dev/** ]
+
+jobs:
+  validate:
+    name: Validate Core & Matrix
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Validate matrix
+        run: python tools/kyro/template.py validate
+      - name: Core tests
+        run: python tools/kyro/template.py core
+
+  fabric-1-16:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['1.16', '1.16.1', '1.16.2', '1.16.3', '1.16.4', '1.16.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" -PallowIncompleteTarget build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-1-17:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['1.17', '1.17.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '16'
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" -PallowIncompleteTarget build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-1-18:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['1.18', '1.18.1', '1.18.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-1-19:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['1.19', '1.19.1', '1.19.2', '1.19.3', '1.19.4']
+    steps:
+      - uses: actions/checkout@v4
+      - actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-1-20:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['1.20', '1.20.1', '1.20.2', '1.20.3', '1.20.4', '1.20.5', '1.20.6']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
+      - name: Configure Java environment variables
+        run: |
+          echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-1-21:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['1.21', '1.21.1', '1.21.2', '1.21.3', '1.21.4', '1.21.5', '1.21.6', '1.21.7', '1.21.8', '1.21.9', '1.21.10', '1.21.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" -PallowIncompleteTarget build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-future:
+    name: Fabric ${{ matrix.minecraft }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ['26.1', '26.1.1', '26.1.2', '26.2', '26.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Build Fabric ${{ matrix.minecraft }}
+        run: |
+          chmod +x gradlew modw
+          python tools/kyro/template.py gradle "-Pmc=${{ matrix.minecraft }}" "-Ploader=fabric" -PallowIncompleteTarget build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dimtoggle-${{ matrix.minecraft }}-fabric
+          path: build/${{ matrix.minecraft }}/fabric/libs/*.jar
+          if-no-files-found: ignore
+
+  fabric-pipeline-summary:
+    name: Fabric Pipeline Summary
+    needs: [fabric-1-16, fabric-1-17, fabric-1-18, fabric-1-19, fabric-1-20, fabric-1-21, fabric-future]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check build status
+        run: |
+          echo "All Fabric version eras completed in pipeline."
