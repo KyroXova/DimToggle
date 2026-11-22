@@ -604,7 +604,7 @@ jobs:
           VERSION="${{ steps.version.outputs.mod_version }}"
           NOTES="DimToggle release $VERSION covering all supported Minecraft versions across Fabric, Forge, and NeoForge."
           gh release create "$TAG" release-jars/*.jar --title "DimToggle $VERSION" --notes "$NOTES" || echo "Release already exists"
-      - name: Sync CurseForge Description
+      - name: Publish to CurseForge & Sync Description
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN || secrets.CURSEFORGE_API_KEY }}
           CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
