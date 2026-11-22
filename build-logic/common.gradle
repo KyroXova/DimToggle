@@ -6,14 +6,7 @@ version = metadata.getProperty('mod.version')
 buildDir = new File(templateRoot, targetLoader == 'core' ? 'build/core' : "build/${targetMinecraft}/${targetLoader}")
 base.archivesName = "${metadata.getProperty('mod.id')}-${targetMinecraft}-${targetLoader}"
 
-repositories {
-    maven { url = 'https://maven.fabricmc.net/' }
-    maven { url = 'https://libraries.minecraft.net/' }
-    mavenCentral()
-    maven { url = 'https://maven.neoforged.net/releases/' }
-    maven { url = 'https://maven.minecraftforge.net/' }
-    maven { url = 'https://repo.maven.apache.org/maven2/' }
-}
+repositories { mavenCentral() }
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(targetLoader == 'core' ? 21 : targetPins.getProperty('java.release').toInteger())
     sourceCompatibility = JavaVersion.toVersion(targetPins.getProperty('java.release'))

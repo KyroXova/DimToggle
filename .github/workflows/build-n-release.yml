@@ -19,6 +19,8 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+  issues: write
 
 concurrency:
   group: build-n-release-${{ github.ref }}
@@ -97,7 +99,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -137,7 +147,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -183,7 +201,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -237,7 +263,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -309,7 +343,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -413,7 +455,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -477,7 +527,15 @@ jobs:
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
-          python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build || (sleep 10 && python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build)
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            sleep 15
+          done
+          exit 1
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -486,7 +544,7 @@ jobs:
           if-no-files-found: ignore
 
   verify-pipeline:
-    name: Pipeline Verification & Matrix Checks
+    name: Pipeline Verification & Diagnostics
     needs: [base-validation, build-1-16, build-1-17, build-1-18, build-1-19, build-1-20, build-1-21, build-26]
     if: always() && !cancelled() && needs.base-validation.result == 'success'
     runs-on: ubuntu-24.04
@@ -495,15 +553,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate all build artifacts
+      - name: Validate target matrix count
         run: |
           python -c "
-          import json, glob
+          import json
           with open('targets.json') as f:
               targets = json.load(f)['targets']
           total = sum(len(t['loaders']) for t in targets)
           print(f'Total configured targets across all versions: {total}')
           "
+      - name: Pipeline Diagnostics & Pull Request Report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python tools/kyro/ci_report.py --run-id "${{ github.run_id }}" --pr-number "${{ github.event.pull_request.number }}"
 
   publish-release:
     name: Publish Release & CurseForge Description
