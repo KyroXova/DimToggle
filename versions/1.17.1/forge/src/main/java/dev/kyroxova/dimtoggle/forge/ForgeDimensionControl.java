@@ -45,15 +45,16 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;\nimport net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;\n
 public final class ForgeDimensionControl {
     private static final Logger LOG = Logger.getLogger("dimtoggle");
     private final Path configDir;
     private final Map<UUID, Long> lastDenial = new HashMap<UUID, Long>();
     private ModConfig config;
     private DimensionLocks locks;
+    private MinecraftServer currentServer;
     private int ticks;
     private final Set<String> announcedWarnings = new HashSet<String>();
 
@@ -64,7 +65,8 @@ public final class ForgeDimensionControl {
 
     @SubscribeEvent
     public void start(ServerStartingEvent event) {
-        Path path = event.getServer().getWorldPath(LevelResource.ROOT).resolve("data/dimtoggle-locks.json");
+        this.currentServer = event.getServer();
+        Path path = this.currentServer.getWorldPath(LevelResource.ROOT).resolve("data/dimtoggle-locks.json");
         try {
             locks = DimensionLocks.loadOrInitialize(path, config.restrictedDimensions);
         } catch (IOException exception) {
@@ -74,6 +76,7 @@ public final class ForgeDimensionControl {
 
     @SubscribeEvent
     public void stop(ServerStoppedEvent event) {
+        this.currentServer = null;
         locks = null;
         lastDenial.clear();
     }
@@ -308,7 +311,7 @@ public final class ForgeDimensionControl {
     @SubscribeEvent
     public void tick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || locks == null || ++ticks % 20 != 0) return;
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        MinecraftServer server = this.currentServer;
         if (server == null) return;
         long now = System.currentTimeMillis();
         try {

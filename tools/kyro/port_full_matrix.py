@@ -1983,6 +1983,24 @@ public final class Entrypoint implements ModInitializer {
 """
 
 def generate_forge_entrypoint(mc: str) -> str:
+    if mc.startswith("1.16"):
+        return """package dev.kyroxova.dimtoggle.forge;
+
+import dev.kyroxova.dimtoggle.DimToggleMod;
+import dev.kyroxova.dimtoggle.platform.RuntimePlatform;
+import java.nio.file.Path;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLPaths;
+
+@Mod(DimToggleMod.MOD_ID)
+public final class Entrypoint {
+    public Entrypoint() {
+        Path configDir = FMLPaths.CONFIGDIR.get();
+        LegacyConfigMigration.migrate(configDir);
+        DimToggleMod.initialize(new RuntimePlatform("forge", configDir));
+    }
+}
+"""
     return """package dev.kyroxova.dimtoggle.forge;
 
 import dev.kyroxova.dimtoggle.DimToggleMod;
@@ -2138,7 +2156,7 @@ def apply_all():
         # Forge
         if "forge" in loaders:
             forge_dir = ROOT / f"versions/{mc}/forge"
-            if mc in ["1.16.1", "1.16.2", "1.16.3", "1.16.4"]:
+            if mc.startswith("1.16"):
                 # Early Forge before official Mojmap support
                 write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/Entrypoint.java", generate_forge_entrypoint(mc))
                 write_if_changed(forge_dir / "src/main/java/dev/kyroxova/dimtoggle/forge/LegacyConfigMigration.java", generate_legacy_migration(mc, "forge"))

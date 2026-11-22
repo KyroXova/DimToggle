@@ -43,9 +43,10 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;\nimport net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.server.ServerLifecycleHooks;\n
+import net.minecraftforge.server.ServerLifecycleHooks;
 public final class ForgeDimensionControl {
     private static final Logger LOG = Logger.getLogger("dimtoggle");
     private final Path configDir;
