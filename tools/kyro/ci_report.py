@@ -142,8 +142,13 @@ def main():
         if job_id:
             for log_attempt in range(1, 4):
                 log_res = subprocess.run(["gh", "run", "view", "--job", str(job_id), "--log-failed"], capture_output=True, text=True)
-                if log_res.returncode == 0 and log_res.stdout:
+                if log_res.returncode == 0 and log_res.stdout and "still in progress" not in log_res.stdout:
                     log_snippet = log_res.stdout
+                    break
+                # Direct job logs API
+                api_res = subprocess.run(["gh", "api", f"repos/:owner/:repo/actions/jobs/{job_id}/logs"], capture_output=True, text=True)
+                if api_res.returncode == 0 and api_res.stdout:
+                    log_snippet = api_res.stdout
                     break
                 time.sleep(2)
 

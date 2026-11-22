@@ -104,7 +104,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
@@ -152,7 +153,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
@@ -206,7 +208,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
@@ -268,7 +271,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
@@ -335,11 +339,13 @@ jobs:
           java-version: |
             17
             21
+            25
           cache: gradle
       - name: Configure Java environment variables
         run: |
           echo "JAVA_17_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
           echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
@@ -348,7 +354,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
@@ -448,10 +455,12 @@ jobs:
           distribution: temurin
           java-version: |
             21
+            25
           cache: gradle
       - name: Configure Java environment variables
         run: |
           echo "JAVA_21_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "JAVA_25_HOME=$JAVA_HOME_25_X64" >> "$GITHUB_ENV"
       - name: Build ${{ matrix.mc }} (${{ matrix.loader }})
         run: |
           chmod +x gradlew modw
@@ -460,7 +469,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
@@ -532,7 +542,8 @@ jobs:
             if python tools/kyro/template.py gradle "-Pmc=${{ matrix.mc }}" "-Ploader=${{ matrix.loader }}" --build-cache build; then
               exit 0
             fi
-            echo "Attempt $attempt failed. Waiting 15s before retrying..."
+            echo "Attempt $attempt failed. Cleaning build roots and waiting 15s before retrying..."
+            rm -rf ".gradle/build-roots/${{ matrix.mc }}/${{ matrix.loader }}" /home/runner/.gradle/caches/minecraftforge
             sleep 15
           done
           exit 1
