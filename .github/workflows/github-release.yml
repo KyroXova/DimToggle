@@ -81,13 +81,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
+          MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
+          NOTES_FILE="changelogs/changelog_1.0.0_to_${MOD_VER}.md"
+          if [ ! -f "$NOTES_FILE" ]; then
+            NOTES_FILE="changelogs/changelog_${MOD_VER}.md"
+          fi
+          if [ ! -f "$NOTES_FILE" ]; then
+            NOTES_FILE="README.md"
+          fi
           if gh release view "$TAG" > /dev/null 2>&1; then
             echo "Release $TAG already exists. Uploading assets to existing release..."
             gh release upload "$TAG" release-jars/*.jar --clobber
           else
-            echo "Creating new GitHub prerelease $TAG..."
+            echo "Creating new GitHub Release $TAG..."
             gh release create "$TAG" release-jars/*.jar \
-              --prerelease \
               --title "DimToggle $TAG" \
-              --notes-file README.md
+              --notes-file "$NOTES_FILE"
           fi

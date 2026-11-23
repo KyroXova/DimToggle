@@ -388,7 +388,7 @@ def main():
                 f"- Full release notes: https://github.com/KyroXova/DimToggle/releases/tag/v{file_version}"
             )
 
-        release_type = os.environ.get("CURSEFORGE_RELEASE_TYPE", "beta")
+        release_type = os.environ.get("CURSEFORGE_RELEASE_TYPE", "release")
         metadata = {
             "changelog": changelog,
             "changelogType": "markdown",

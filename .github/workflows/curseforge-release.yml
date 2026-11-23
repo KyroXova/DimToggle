@@ -74,6 +74,6 @@ jobs:
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_KEY || secrets.CURSEFORGE_TOKEN }}
           CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID || '1378571' }}
-          CURSEFORGE_RELEASE_TYPE: beta
+          CURSEFORGE_RELEASE_TYPE: release
         run: |
           python tools/kyro/curseforge_sync.py
