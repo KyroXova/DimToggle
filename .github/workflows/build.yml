@@ -123,3 +123,24 @@ jobs:
           name: "${{ matrix.batch_id }}-artifacts"
           path: build/*/*/libs/*.jar
           if-no-files-found: error
+
+      - name: Generate Batch Summary
+        if: always()
+        run: |
+          echo "### Batch ${{ matrix.batch_id }} Target Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Minecraft | Loader | Status | Built Artifact |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| :--- | :---: | :---: | :--- |" >> "$GITHUB_STEP_SUMMARY"
+          for task in ${{ matrix.tasks }}; do
+            parts=$(echo "$task" | sed 's/^build_//')
+            ldr=$(echo "$parts" | awk -F'_' '{print $NF}')
+            mc_sanitized=$(echo "$parts" | sed "s/_${ldr}$//")
+            mc=$(echo "$mc_sanitized" | tr '_' '.')
+            jar_file=$(find build/${mc}/${ldr}/libs -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" 2>/dev/null | head -n 1)
+            if [ -n "$jar_file" ] && [ -f "$jar_file" ]; then
+              jar_name=$(basename "$jar_file")
+              echo "| $mc | $ldr | Success | \`$jar_name\` |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| $mc | $ldr | Failed / Pending | None |" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done

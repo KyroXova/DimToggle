@@ -64,7 +64,7 @@ def gradle(arguments):
     project_root = ROOT / '.gradle/build-roots' / mc / loader
     project_root.mkdir(parents=True,exist_ok=True)
     mod_name = properties(ROOT / 'properties/mod.properties').get('mod.name', 'DimToggle')
-    (project_root / 'settings.gradle').write_text(f"rootProject.name = '{mod_name}'\n",encoding='utf-8')
+    (project_root / 'settings.gradle').write_text(f"rootProject.name = '{mod_name}-{mc}-{loader}'\n", encoding='utf-8')
     (project_root / 'build.gradle').write_bytes((ROOT / 'build-logic/target.gradle').read_bytes())
     (project_root / 'gradle.properties').write_bytes((ROOT / 'gradle.properties').read_bytes())
     command = [str(executable),'-Djava.net.preferIPv4Stack=true','-Dsun.net.client.defaultConnectTimeout=60000','-Dsun.net.client.defaultReadTimeout=120000','-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments]
