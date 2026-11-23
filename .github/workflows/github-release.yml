@@ -1,0 +1,89 @@
+name: github-release
+
+on:
+  workflow_run:
+    workflows: [ "build" ]
+    types: [ completed ]
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Explicit release tag (leave empty for mod.properties version)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Collect Artifacts and Publish GitHub Release
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download all batch artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-jars run-artifacts
+          BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
+          if [ -z "$BUILD_RUN_ID" ]; then
+            BUILD_RUN_ID=$(gh run list --workflow=build.yml --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
+          fi
+          echo "Downloading artifacts from build run $BUILD_RUN_ID..."
+          gh run download "$BUILD_RUN_ID" --dir run-artifacts/
+          # Consolidate all non-dev / non-sources JARs into release-jars
+          find run-artifacts/ -type f -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" -exec cp {} release-jars/ \;
+          echo "Total release JARs collected: $(ls -1 release-jars/*.jar | wc -l)"
+
+      - name: Verify all target JARs are present
+        run: |
+          python -c "
+          import json, glob, sys
+          with open('targets.json') as f:
+              targets = json.load(f)['targets']
+          expected = sum(len(t['loaders']) for t in targets)
+          jars = glob.glob('release-jars/*.jar')
+          release_jars = [j for j in jars if not j.endswith('-dev.jar') and not j.endswith('-sources.jar')]
+          print(f'Discovered {len(release_jars)} release JAR(s) (expected {expected}).')
+          if len(release_jars) < expected:
+              print(f'Error: Expected {expected} jars, found only {len(release_jars)}.')
+              sys.exit(1)
+          print('All target JARs verified successfully!')
+          "
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
+            TAG="v${MOD_VER}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG"
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists. Uploading assets to existing release..."
+            gh release upload "$TAG" release-jars/*.jar --clobber
+          else
+            echo "Creating new GitHub prerelease $TAG..."
+            gh release create "$TAG" release-jars/*.jar \
+              --prerelease \
+              --title "DimToggle $TAG" \
+              --notes-file README.md
+          fi

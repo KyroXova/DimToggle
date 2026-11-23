@@ -37,7 +37,7 @@ if (inventoryFile.isFile()) {
         def mcVer = target['minecraft']
         def mcSanitized = mcVer.replace('.', '_')
         target['loaders'].keySet().each { ldr ->
-            ['runClient', 'runServer'].each { verb ->
+            ['build', 'clean', 'runClient', 'runServer'].each { verb ->
                 def taskName = "${verb}_${mcSanitized}_${ldr}"
                 tasks.register(taskName, Exec) {
                     group = "minecraft ${verb}"
@@ -45,6 +45,9 @@ if (inventoryFile.isFile()) {
                     def cmd = [python, helper, 'gradle', "-Pmc=${mcVer}", "-Ploader=${ldr}"]
                     if (project.hasProperty('allowIncompleteTarget')) {
                         cmd << '-PallowIncompleteTarget'
+                    }
+                    if (project.gradle.startParameter.isBuildCacheEnabled()) {
+                        cmd << '--build-cache'
                     }
                     cmd << verb
                     commandLine cmd

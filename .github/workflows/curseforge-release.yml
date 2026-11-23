@@ -1,0 +1,76 @@
+name: curseforge-release
+
+on:
+  workflow_run:
+    workflows: [ "github-release" ]
+    types: [ completed ]
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Explicit release tag to sync (leave empty for mod.properties version)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  curseforge:
+    name: Sync Release to CurseForge
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
+            TAG="v${MOD_VER}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG"
+
+      - name: Download JARs from GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-jars
+          TAG="${{ steps.tag.outputs.tag }}"
+          echo "Downloading assets from release $TAG..."
+          gh release download "$TAG" --dir release-jars/ --pattern "*.jar"
+          echo "Downloaded $(ls -1 release-jars/*.jar | wc -l) JARs."
+
+      - name: Verify release JARs count
+        run: |
+          python -c "
+          import json, glob, sys
+          with open('targets.json') as f:
+              targets = json.load(f)['targets']
+          expected = sum(len(t['loaders']) for t in targets)
+          jars = glob.glob('release-jars/*.jar')
+          release_jars = [j for j in jars if not j.endswith('-dev.jar') and not j.endswith('-sources.jar')]
+          print(f'Found {len(release_jars)} release JAR(s) (expected {expected}).')
+          if len(release_jars) < expected:
+              print(f'Error: Expected {expected} jars, found only {len(release_jars)}.')
+              sys.exit(1)
+          print('All target JARs verified successfully!')
+          "
+
+      - name: Publish to CurseForge with auto-retry
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_API_KEY || secrets.CURSEFORGE_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID || '1378571' }}
+          CURSEFORGE_RELEASE_TYPE: beta
+        run: |
+          python tools/kyro/curseforge_sync.py
