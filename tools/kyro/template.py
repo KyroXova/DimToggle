@@ -45,7 +45,11 @@ def gradle(arguments):
     for major in (8,16,17,21,25):
         if f'java.{major}.home' in local:
             env[f'JAVA_{major}_HOME'] = local[f'java.{major}.home']
-    java_home = env.get(f'JAVA_{config["java"]}_HOME') or env.get('JAVA_HOME')
+    req_java = config["java"]
+    java_home = (env.get(f'JAVA_{req_java}_HOME') or 
+                 env.get(f'JAVA_HOME_{req_java}_X64') or 
+                 env.get(f'JAVA_HOME_{req_java}_arm64') or 
+                 env.get('JAVA_HOME'))
     executable = Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java') if java_home else Path('java')
     version = subprocess.run([str(executable),'-version'],capture_output=True,text=True)
     match = re.search(r'version "(?:1\.)?(\d+)',version.stderr+version.stdout)
@@ -59,10 +63,11 @@ def gradle(arguments):
     if java_home: env['JAVA_HOME'] = java_home
     project_root = ROOT / '.gradle/build-roots' / mc / loader
     project_root.mkdir(parents=True,exist_ok=True)
-    (project_root / 'settings.gradle').write_text("rootProject.name = 'minecraft-mod-template'\n",encoding='utf-8')
+    mod_name = properties(ROOT / 'properties/mod.properties').get('mod.name', 'DimToggle')
+    (project_root / 'settings.gradle').write_text(f"rootProject.name = '{mod_name}-{mc}-{loader}'\n", encoding='utf-8')
     (project_root / 'build.gradle').write_bytes((ROOT / 'build-logic/target.gradle').read_bytes())
     (project_root / 'gradle.properties').write_bytes((ROOT / 'gradle.properties').read_bytes())
-    command = [str(executable),'-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments]
+    command = [str(executable),'-Djava.net.preferIPv4Stack=true','-Dsun.net.client.defaultConnectTimeout=60000','-Dsun.net.client.defaultReadTimeout=120000','-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments]
     process = subprocess.Popen(command,cwd=ROOT,env=env)
     if os.name == 'nt':
         try:
@@ -89,7 +94,7 @@ def validate():
         wrapper = properties(directory / 'gradle-wrapper.properties')
         assert re.fullmatch(r'[a-f0-9]{64}',wrapper['distributionSha256Sum']), profile
     assert len({t['minecraft'] for t in targets}) == len(targets), 'Duplicate versions'
-    assert not targets or targets[0]['minecraft'] == '1.16'
+    assert targets[0]['minecraft'] == '1.16' and targets[-1]['minecraft'] == '26.3'
     common = list((ROOT / 'common/src/main/java').rglob('*.java'))
     for source in common:
         assert not re.search(r'import\s+(net\.minecraft|net\.fabricmc|net\.minecraftforge|net\.neoforged)',source.read_text()), source

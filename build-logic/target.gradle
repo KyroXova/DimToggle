@@ -5,24 +5,44 @@ buildscript {
     def loader = project.hasProperty('core') ? 'core' : (project.findProperty('loader') ?: 'fabric')
     def pins = new Properties()
     def pinFile = new File(template, "properties/${mc}.properties")
-    if (loader == 'core' && !pinFile.isFile()) {
-        pins.setProperty('java.release', '8')
-        pins.setProperty('loaders', '')
-    }
-    if (loader != 'core' && !pinFile.isFile()) throw new GradleException("Unknown Minecraft target: ${mc}")
-    if (pinFile.isFile()) pinFile.withInputStream { pins.load(it) }
+    if (!pinFile.isFile()) throw new GradleException("Unknown Minecraft target: ${mc}")
+    pinFile.withInputStream { pins.load(it) }
     if (loader != 'core' && !pins.getProperty('loaders').split(',').contains(loader)) {
         throw new GradleException("${loader} is unavailable for ${mc}; see targets.json")
+    }
+    def implemented = true
+    if (loader != 'core' && !implemented && !project.hasProperty('allowIncompleteTarget')) {
+        throw new GradleException("DimToggle behavior is not implemented for ${mc}/${loader}. Use -PallowIncompleteTarget only for template development.")
     }
     project.ext.targetPins = pins
     project.ext.targetMinecraft = mc
     project.ext.targetLoader = loader
     repositories {
-        maven { url = 'https://maven.fabricmc.net/' }
-        maven { url = 'https://maven.minecraftforge.net/' }
-        maven { url = 'https://maven.neoforged.net/releases/' }
-        mavenCentral()
-        gradlePluginPortal()
+        all { repo ->
+            if (repo instanceof MavenArtifactRepository) {
+                def u = repo.url.toString()
+                if (u.contains('repo.maven.apache.org') || u.contains('repo1.maven.org')) {
+                    repo.url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+                }
+            }
+        }
+        if (loader == 'fabric') {
+            maven { url = 'https://maven.fabricmc.net/' }
+        } else if (loader == 'forge') {
+            maven { url = 'https://maven.minecraftforge.net/' }
+        } else if (loader == 'neoforge') {
+            maven { url = 'https://maven.neoforged.net/releases/' }
+        }
+        maven {
+            name = 'GoogleMavenCentral'
+            url = 'https://maven-central.storage-download.googleapis.com/maven2/'
+        }
+        gradlePluginPortal {
+            content {
+                includeGroupByRegex 'gradle\\.plugin.*'
+                includeGroupByRegex 'org\\.jetbrains.*'
+            }
+        }
     }
     dependencies {
         if (loader == 'fabric') classpath "net.fabricmc:fabric-loom:${pins.getProperty('fabric.loom')}"

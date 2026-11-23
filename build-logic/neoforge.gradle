@@ -7,7 +7,7 @@ if (targetPins.getProperty('neoforge.plugin') == 'net.neoforged.moddev') {
             client { client(); gameDirectory = new File(templateRoot,"run/${targetMinecraft}/neoforge/client") }
             server { server(); gameDirectory = new File(templateRoot,"run/${targetMinecraft}/neoforge/server") }
         }
-        mods { examplemod { sourceSet sourceSets.main } }
+        mods { dimtoggle { sourceSet sourceSets.main } }
     }
 } else {
     // Library lists contain absolute paths and must not be reused across workspaces.
@@ -35,7 +35,17 @@ if (targetPins.getProperty('neoforge.plugin') == 'net.neoforged.moddev') {
             modSource sourceSets.main
             workingDirectory = new File(templateRoot,"run/${targetMinecraft}/neoforge/${name}")
         }
-        client { }
+        client {
+            if (project.hasProperty('dimtoggleSmokeTest')) {
+                systemProperties 'dimtoggle.test.exitOnTitle': 'true'
+                if (project.hasProperty('dimtoggleSmokeRunId')) systemProperties 'dimtoggle.test.runId': project.property('dimtoggleSmokeRunId')
+            }
+        }
         server { }
+    }
+}
+gradle.projectsEvaluated {
+    tasks.matching { it.name.startsWith('run') }.configureEach {
+        dependsOn tasks.named('processResources')
     }
 }

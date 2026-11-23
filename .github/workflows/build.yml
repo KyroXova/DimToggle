@@ -1,20 +1,146 @@
-name: Build targets
+name: build
+
 on:
-  push:
   pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      batches:
+        description: 'Number of matrix batches (default: 18)'
+        required: false
+        default: '18'
+        type: string
+      mode:
+        description: 'Runner allocation mode'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - all-github
+          - all-local
+
 permissions:
   contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Dsun.net.client.defaultConnectTimeout=60000 -Dsun.net.client.defaultReadTimeout=120000"
+
 jobs:
-  core:
-    runs-on: ubuntu-latest
+  generate-matrix:
+    name: Generate Matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.gen.outputs.matrix }}
+      total_batches: ${{ steps.gen.outputs.total_batches }}
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-java@v6.1.0
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: actions/setup-python@v7.1.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python tools/kyro/template.py core
+      - name: Generate Batched Matrix
+        id: gen
+        run: |
+          BATCHES="${{ github.event.inputs.batches || '18' }}"
+          MODE="${{ github.event.inputs.mode || 'auto' }}"
+          python tools/kyro/generate_matrix.py --batches "$BATCHES" --mode "$MODE"
+
+  build:
+    name: "${{ matrix.name }}"
+    needs: generate-matrix
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Java (Standard)
+        if: ${{ !matrix.has_1_17 }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            17
+            21
+            25
+
+      - name: Set up Java (Zulu with JDK 16)
+        if: ${{ matrix.has_1_17 }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: |
+            8
+            16
+            17
+            21
+            25
+
+      - name: Configure Java environment variables
+        run: |
+          echo "JAVA_8_HOME=${JAVA_HOME_8_X64:-$JAVA_HOME}" >> "$GITHUB_ENV"
+          echo "JAVA_16_HOME=${JAVA_HOME_16_X64:-$JAVA_HOME}" >> "$GITHUB_ENV"
+          echo "JAVA_17_HOME=${JAVA_HOME_17_X64:-$JAVA_HOME}" >> "$GITHUB_ENV"
+          echo "JAVA_21_HOME=${JAVA_HOME_21_X64:-$JAVA_HOME}" >> "$GITHUB_ENV"
+          echo "JAVA_25_HOME=${JAVA_HOME_25_X64:-$JAVA_HOME}" >> "$GITHUB_ENV"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Pre-warm Mojang Metadata
+        run: |
+          curl -f -s -S --retry 5 --retry-delay 2 --max-time 30 https://launchermeta.mojang.com/mc/game/version_manifest_v2.json > /dev/null || true
+          curl -f -s -S --retry 5 --retry-delay 2 --max-time 30 https://piston-meta.mojang.com/mc/game/version_manifest_v2.json > /dev/null || true
+
+      - name: Build batch ${{ matrix.batch_id }}
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 15
+          command: |
+            chmod +x gradlew modw
+            ./gradlew ${{ matrix.tasks }} --no-daemon --max-workers=2 --build-cache -Dorg.gradle.internal.http.socketTimeout=60000 -Dorg.gradle.internal.http.connectionTimeout=60000
+
+      - name: Upload batch artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ matrix.batch_id }}-artifacts"
+          path: build/*/*/libs/*.jar
+          if-no-files-found: error
+
+      - name: Generate Batch Summary
+        if: always()
+        run: |
+          echo "### Batch ${{ matrix.batch_id }} Target Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Minecraft | Loader | Status | Built Artifact |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| :--- | :---: | :---: | :--- |" >> "$GITHUB_STEP_SUMMARY"
+          for task in ${{ matrix.tasks }}; do
+            parts=$(echo "$task" | sed 's/^build_//')
+            ldr=$(echo "$parts" | awk -F'_' '{print $NF}')
+            mc_sanitized=$(echo "$parts" | sed "s/_${ldr}$//")
+            mc=$(echo "$mc_sanitized" | tr '_' '.')
+            jar_file=$(find build/${mc}/${ldr}/libs -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" 2>/dev/null | head -n 1)
+            if [ -n "$jar_file" ] && [ -f "$jar_file" ]; then
+              jar_name=$(basename "$jar_file")
+              echo "| $mc | $ldr | Success | \`$jar_name\` |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| $mc | $ldr | Failed / Pending | None |" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
