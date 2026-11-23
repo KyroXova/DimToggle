@@ -45,17 +45,16 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.server.ServerLifecycleHooks;
-
 public final class ForgeDimensionControl {
     private static final Logger LOG = Logger.getLogger("dimtoggle");
     private final Path configDir;
     private final Map<UUID, Long> lastDenial = new HashMap<UUID, Long>();
     private ModConfig config;
     private DimensionLocks locks;
+    private MinecraftServer currentServer;
     private int ticks;
     private final Set<String> announcedWarnings = new HashSet<String>();
 
@@ -65,8 +64,9 @@ public final class ForgeDimensionControl {
     }
 
     @SubscribeEvent
-    public void start(ServerStartingEvent event) {
-        Path path = event.getServer().getWorldPath(LevelResource.ROOT).resolve("data/dimtoggle-locks.json");
+    public void start(FMLServerStartingEvent event) {
+        this.currentServer = event.getServer();
+        Path path = this.currentServer.getWorldPath(LevelResource.ROOT).resolve("data/dimtoggle-locks.json");
         try {
             locks = DimensionLocks.loadOrInitialize(path, config.restrictedDimensions);
         } catch (IOException exception) {
@@ -75,7 +75,8 @@ public final class ForgeDimensionControl {
     }
 
     @SubscribeEvent
-    public void stop(ServerStoppedEvent event) {
+    public void stop(FMLServerStoppedEvent event) {
+        this.currentServer = null;
         locks = null;
         lastDenial.clear();
     }
@@ -310,12 +311,12 @@ public final class ForgeDimensionControl {
     @SubscribeEvent
     public void tick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || locks == null || ++ticks % 20 != 0) return;
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        MinecraftServer server = this.currentServer;
         if (server == null) return;
         long now = System.currentTimeMillis();
         try {
             for (String dimension : locks.expire(now)) {
-                server.getPlayerList().broadcastMessage(new TextComponent("§aDimension unlocked: §f" + dimension), ChatType.SYSTEM, Util.NIL_UUID);
+                for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§aDimension unlocked: §f" + dimension), Util.NIL_UUID);
             }
         } catch (IOException exception) {
             LOG.severe("Failed to persist expired locks: " + exception.getMessage());
@@ -327,7 +328,7 @@ public final class ForgeDimensionControl {
                     String key = entry.getKey() + ":" + remSec;
                     if (announcedWarnings.add(key)) {
                         String timeStr = remSec >= 60 ? (remSec / 60) + " minutes" : remSec + " seconds";
-                        server.getPlayerList().broadcastMessage(new TextComponent("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), ChatType.SYSTEM, Util.NIL_UUID);
+                        for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), Util.NIL_UUID);
                     }
                 }
             }
@@ -531,7 +532,7 @@ public final class ForgeDimensionControl {
                 source.sendFailure(new TextComponent("§cDimension is not locked: " + dimension));
                 return 0;
             }
-            source.getServer().getPlayerList().broadcastMessage(new TextComponent("§aDimension unlocked: §f" + dimension), ChatType.SYSTEM, Util.NIL_UUID);
+            for (ServerPlayer _p : source.getServer().getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§aDimension unlocked: §f" + dimension), Util.NIL_UUID);
             return 1;
         } catch (IOException exception) {
             source.sendFailure(new TextComponent("§cCould not persist lock update: " + exception.getMessage()));

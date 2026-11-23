@@ -528,7 +528,7 @@ public final class NeoForgeDimensionControl {
                 source.sendFailure(Component.literal("§cDimension is not locked: " + dimension));
                 return 0;
             }
-            source.getServer().getPlayerList().broadcastSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension), false);
+            for (ServerPlayer _p : source.getServer().getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension));
             return 1;
         } catch (IOException exception) {
             source.sendFailure(Component.literal("§cCould not persist lock update: " + exception.getMessage()));

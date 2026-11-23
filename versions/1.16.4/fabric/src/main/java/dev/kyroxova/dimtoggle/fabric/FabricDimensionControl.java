@@ -207,8 +207,8 @@ public final class FabricDimensionControl {
         if (player.hasPermissions(2) && config.allowOps) return true;
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return true;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < player.inventory.getContainerSize(); i++) {
+            net.minecraft.world.item.ItemStack stack = player.inventory.getItem(i);
             if (!stack.isEmpty()) {
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) return true;
@@ -265,8 +265,8 @@ public final class FabricDimensionControl {
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return;
         if (player.hasPermissions(2) && config.allowOps) return;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
+        for (int i = 0; i < player.inventory.getContainerSize(); i++) {
+            net.minecraft.world.item.ItemStack stack = player.inventory.getItem(i);
             if (!stack.isEmpty()) {
                 String desc = stack.getItem().getDescriptionId();
                 if (desc != null && (desc.contains(req) || stack.getItem().toString().equalsIgnoreCase(req))) {
@@ -294,14 +294,14 @@ public final class FabricDimensionControl {
             if (state.is(Blocks.NETHER_PORTAL)) {
                 Direction.Axis axis = state.hasProperty(BlockStateProperties.HORIZONTAL_AXIS) ?
                     state.getValue(BlockStateProperties.HORIZONTAL_AXIS) : Direction.Axis.X;
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians(player.yRot);
                 if (axis == Direction.Axis.X) {
                     pushZ = -Math.cos(yawRad) >= 0 ? -2.5 : 2.5;
                 } else {
                     pushX = Math.sin(yawRad) >= 0 ? 2.5 : -2.5;
                 }
             } else {
-                double yawRad = Math.toRadians(player.getYRot());
+                double yawRad = Math.toRadians(player.yRot);
                 pushX = Math.sin(yawRad) * 2.5;
                 pushZ = -Math.cos(yawRad) * 2.5;
             }
@@ -310,7 +310,7 @@ public final class FabricDimensionControl {
             double targetY = player.getY() + pushY;
             double targetZ = player.getZ() + pushZ;
 
-            player.teleportTo(player.getLevel(), targetX, targetY, targetZ, player.getYRot(), -10.0f);
+            player.teleportTo(player.getLevel(), targetX, targetY, targetZ, player.yRot, -10.0f);
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 45, 3, false, false, true));
@@ -331,7 +331,7 @@ public final class FabricDimensionControl {
                 if (player.getLevel() != spawnLevel && (locks == null || locks.isLocked("minecraft:overworld", System.currentTimeMillis()))) return;
                 BlockPos spawnPos = SafeSpawn.find(spawnLevel);
                 if (spawnPos == null) return;
-                player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());
+                player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.yRot, player.xRot);
             }
         });
     }
@@ -364,7 +364,7 @@ public final class FabricDimensionControl {
         long now = System.currentTimeMillis();
         try {
             for (String dimension : locks.expire(now)) {
-                server.getPlayerList().broadcastMessage(new TextComponent("§aDimension unlocked: §f" + dimension), ChatType.SYSTEM, Util.NIL_UUID);
+                for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§aDimension unlocked: §f" + dimension), Util.NIL_UUID);
             }
         } catch (IOException exception) {
             LOG.severe("Failed to persist expired locks: " + exception.getMessage());
@@ -376,7 +376,7 @@ public final class FabricDimensionControl {
                     String key = entry.getKey() + ":" + remSec;
                     if (announcedWarnings.add(key)) {
                         String timeStr = remSec >= 60 ? (remSec / 60) + " minutes" : remSec + " seconds";
-                        server.getPlayerList().broadcastMessage(new TextComponent("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), ChatType.SYSTEM, Util.NIL_UUID);
+                        for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), Util.NIL_UUID);
                     }
                 }
             }
@@ -497,7 +497,7 @@ public final class FabricDimensionControl {
                 source.sendFailure(new TextComponent("§cDimension is not locked: " + dimension));
                 return 0;
             }
-            source.getServer().getPlayerList().broadcastMessage(new TextComponent("§aDimension unlocked: §f" + dimension), ChatType.SYSTEM, Util.NIL_UUID);
+            for (ServerPlayer _p : source.getServer().getPlayerList().getPlayers()) _p.sendMessage(new TextComponent("§aDimension unlocked: §f" + dimension), Util.NIL_UUID);
             return 1;
         } catch (IOException exception) {
             source.sendFailure(new TextComponent("§cCould not persist lock update: " + exception.getMessage()));

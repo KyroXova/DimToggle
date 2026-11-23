@@ -6,9 +6,43 @@ version = metadata.getProperty('mod.version')
 buildDir = new File(templateRoot, targetLoader == 'core' ? 'build/core' : "build/${targetMinecraft}/${targetLoader}")
 base.archivesName = "${metadata.getProperty('mod.id')}-${targetMinecraft}-${targetLoader}"
 
-repositories { mavenCentral() }
+repositories {
+    maven {
+        name = 'SpongeMaven'
+        url = 'https://repo.spongepowered.org/repository/maven-public/'
+        content {
+            includeGroupByRegex 'org\\.spongepowered.*'
+        }
+    }
+    maven {
+        name = 'GoogleMavenCentral'
+        url = 'https://maven-central.storage-download.googleapis.com/maven2/'
+        content {
+            excludeGroupByRegex 'remapped.*'
+            excludeGroupByRegex 'loom.*'
+            excludeGroupByRegex 'net\\.fabricmc.*'
+            excludeGroupByRegex 'net\\.minecraftforge.*'
+            excludeGroupByRegex 'net\\.neoforged.*'
+            excludeGroup 'minecraft'
+            excludeGroupByRegex 'net\\.minecraft.*'
+            excludeGroup 'com.mojang'
+            excludeGroupByRegex 'org\\.spongepowered.*'
+            excludeGroupByRegex 'gradle\\.plugin.*'
+        }
+    }
+}
+repositories.all { repo ->
+    if (repo instanceof MavenArtifactRepository) {
+        def u = repo.url.toString()
+        if (u.contains('repo.maven.apache.org') || u.contains('repo1.maven.org')) {
+            repo.url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+        }
+    }
+}
+def jvmTarget = targetLoader == 'core' ? 21 : targetPins.getProperty('java.release').toInteger()
+def toolchainVersion = jvmTarget == 16 ? 17 : jvmTarget
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(targetLoader == 'core' ? 21 : targetPins.getProperty('java.release').toInteger())
+    toolchain.languageVersion = JavaLanguageVersion.of(toolchainVersion)
     sourceCompatibility = JavaVersion.toVersion(targetPins.getProperty('java.release'))
     targetCompatibility = JavaVersion.toVersion(targetPins.getProperty('java.release'))
 }
@@ -35,7 +69,7 @@ tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 processResources {
     exclude '**/.gitkeep'
     duplicatesStrategy = DuplicatesStrategy.FAIL
-    def values = [mod_id: metadata.getProperty('mod.id'), mod_name: metadata.getProperty('mod.name'), mod_version: version.toString(), mod_description: metadata.getProperty('mod.description'), mod_license: metadata.getProperty('mod.license'), minecraft_version: targetMinecraft, java_release: targetPins.getProperty('java.release'), loader_version: targetPins.getProperty("${targetLoader}.version", '')]
+    def values = [mod_id: metadata.getProperty('mod.id'), mod_name: metadata.getProperty('mod.name'), mod_version: version.toString(), mod_description: metadata.getProperty('mod.description'), mod_authors: metadata.getProperty('mod.authors', 'Kingodogo, KyroXova'), mod_license: metadata.getProperty('mod.license'), minecraft_version: targetMinecraft, java_release: targetPins.getProperty('java.release'), loader_version: targetPins.getProperty("${targetLoader}.version", '')]
     inputs.properties(values)
     filesMatching(['fabric.mod.json', 'META-INF/mods.toml', 'META-INF/neoforge.mods.toml']) { expand(values) }
 }

@@ -45,6 +45,7 @@ import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public final class ForgeDimensionControl {
@@ -312,7 +313,7 @@ public final class ForgeDimensionControl {
         long now = System.currentTimeMillis();
         try {
             for (String dimension : locks.expire(now)) {
-                server.getPlayerList().broadcastSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension), false);
+                for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension));
             }
         } catch (IOException exception) {
             LOG.severe("Failed to persist expired locks: " + exception.getMessage());
@@ -324,7 +325,7 @@ public final class ForgeDimensionControl {
                     String key = entry.getKey() + ":" + remSec;
                     if (announcedWarnings.add(key)) {
                         String timeStr = remSec >= 60 ? (remSec / 60) + " minutes" : remSec + " seconds";
-                        server.getPlayerList().broadcastSystemMessage(Component.literal("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"), false);
+                        for (ServerPlayer _p : server.getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§6[DimToggle] §fDimension §e" + entry.getKey() + " §fwill unlock in §b" + timeStr + "§f!"));
                     }
                 }
             }
@@ -528,7 +529,7 @@ public final class ForgeDimensionControl {
                 source.sendFailure(Component.literal("§cDimension is not locked: " + dimension));
                 return 0;
             }
-            source.getServer().getPlayerList().broadcastSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension), false);
+            for (ServerPlayer _p : source.getServer().getPlayerList().getPlayers()) _p.sendSystemMessage(Component.literal("§aDimension unlocked: §f" + dimension));
             return 1;
         } catch (IOException exception) {
             source.sendFailure(Component.literal("§cCould not persist lock update: " + exception.getMessage()));
