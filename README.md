@@ -4,26 +4,26 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔒 **Dynamic Dimension Locking**: Lock any dimension permanently or for a specific duration (e.g. `2d`, `12h30m`, `45m`).
-- ⏰ **Timed Expiry & Announcements**: Automatically unlocks dimensions when the timer expires and broadcasts server-wide chat notifications.
-- 👥 **Granular Access Control**:
+- **Dynamic Dimension Locking**: Lock any dimension permanently or for a specific duration (e.g. `2d`, `12h30m`, `45m`).
+- **Timed Expiry and Announcements**: Automatically unlocks dimensions when the timer expires and broadcasts server-wide chat notifications.
+- **Granular Access Control**:
   - **Operator Bypass**: Configurable (`allowOps`) permission level 2 access.
   - **Player Allowlist**: Grant specific players entry to locked dimensions via commands (`/dimtoggle allow`) or config.
   - **Group Allowlist**: Allowlist player groups via commands (`/dimtoggle allowgroup`), Scoreboard Teams, or LuckPerms groups.
   - **LuckPerms Integration**: Full support for permission nodes (`dimtoggle.bypass`, `dimtoggle.<namespace>.<dimension>`).
-- 🛡️ **Safe Enforcement**:
+- **Safe Enforcement**:
   - Prevents portal traps, void falling, and travel loops by safely relocating unauthorized players to world spawn (`teleportToSpawn`).
   - Configurable rate-limited warning messages to avoid chat spam.
-- 🚀 **Convenient Admin Teleport**: Safely teleport players across dimensions using `/dt <player> <dimension>`.
-- ⚡ **Server-Side Only**: Runs entirely on the server (dedicated server or internal server in singleplayer/LAN). Connecting players do **not** need the mod installed!
+- **Admin Teleport Utility**: Safely teleport players across dimensions using `/dt <player> <dimension>`.
+- **Server-Side Only**: Runs entirely on the server (dedicated server or internal server in singleplayer/LAN). Connecting players do not need the mod installed.
 
 ---
 
-## 🎮 Supported Versions
+## Supported Versions
 
-DimToggle is a **server-side mod** (clients do not need to install it). Native builds are provided across all supported releases:
+DimToggle is a server-side mod (clients do not need to install it). Native builds are provided across all supported releases:
 
 | Minecraft Version | Fabric | Forge | NeoForge | Side |
 | :--- | :---: | :---: | :---: | :---: |
@@ -70,7 +70,7 @@ DimToggle is a **server-side mod** (clients do not need to install it). Native b
 
 ---
 
-## 📜 Commands & Permissions
+## Commands & Permissions
 
 All administrative commands require permission level 2 (Operators) or the `dimtoggle.admin` permission node.
 
@@ -88,15 +88,15 @@ All administrative commands require permission level 2 (Operators) or the `dimto
 | `/dimtoggle reload` | Reload the `config/dimtoggle.json` configuration file. |
 | `/dt <player> <dimension>` | Safely teleport a player to the target dimension's spawn point. |
 
-### 🔑 Permission Nodes (LuckPerms)
+### Permission Nodes (LuckPerms)
 
-- `dimtoggle.admin` — Full access to all DimToggle commands.
-- `dimtoggle.bypass` — Allows entering any locked dimension regardless of restrictions.
-- `dimtoggle.<namespace>.<dimension>` — Grants access to a specific dimension (e.g. `dimtoggle.minecraft.the_end`).
+- `dimtoggle.admin`: Full access to all DimToggle commands.
+- `dimtoggle.bypass`: Allows entering any locked dimension regardless of restrictions.
+- `dimtoggle.<namespace>.<dimension>`: Grants access to a specific dimension (e.g. `dimtoggle.minecraft.the_end`).
 
 ---
 
-## ⚙️ Configuration (`config/dimtoggle.json`)
+## Configuration (`config/dimtoggle.json`)
 
 ```json
 {
@@ -131,12 +131,12 @@ All administrative commands require permission level 2 (Operators) or the `dimto
 
 ---
 
-## 👥 Authors
+## Authors
 
 DimToggle is developed and maintained by **Kingodogo** and **KyroXova**.
 
 ---
 
-## 📄 License
+## License
 
 DimToggle is released under the MIT License.

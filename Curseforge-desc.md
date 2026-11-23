@@ -4,9 +4,9 @@
 
 ---
 
-## 🎮 Supported Versions
+## Supported Versions
 
-DimToggle is a **server-side mod** (clients do not need to install it). Native builds are provided across all supported releases:
+DimToggle is a server-side mod (clients do not need to install it). Native builds are provided across all supported releases:
 
 | Minecraft Version | Fabric | Forge | NeoForge | Side |
 | :--- | :---: | :---: | :---: | :---: |
@@ -53,25 +53,25 @@ DimToggle is a **server-side mod** (clients do not need to install it). Native b
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔒 **Dynamic Dimension Locking**: Lock any dimension permanently or for a specific duration (e.g. `2d`, `12h30m`, `45m`).
-- ⏳ **Timed Expiry & Announcements**: Automatically unlocks dimensions when the timer expires and broadcasts server-wide notifications.
-- 👥 **Granular Access Control**:
+- **Dynamic Dimension Locking**: Lock any dimension permanently or for a specific duration (e.g. `2d`, `12h30m`, `45m`).
+- **Timed Expiry and Announcements**: Automatically unlocks dimensions when the timer expires and broadcasts server-wide notifications.
+- **Granular Access Control**:
   - **Operator Bypass**: Configurable (`allowOps`) permission level 2 access.
   - **Specific Users**: Allowlist individual players via commands (`/dimtoggle allow`) or configuration.
   - **Specific Groups**: Allowlist player groups via commands (`/dimtoggle allowgroup`), LuckPerms groups, or Minecraft Scoreboard Teams.
   - **LuckPerms Integration**: Full integration supporting permission nodes (`dimtoggle.<namespace>.<dimension>`, `dimtoggle.*`, `dimtoggle.bypass`).
-- 🛡️ **Safe Enforcement**: Blocks unauthorized travel, provides rate-limited notification messages, and safely relocates players to avoid portal trap loops or void falls.
-- 🚀 **Convenient Teleport**: Safe dimension teleportation command (`/dt <player> <dimension>`).
-- ⚡ **Server-Side Only**: Runs entirely on the server. Clients do not need the mod installed!
+- **Safe Enforcement**: Blocks unauthorized travel, provides rate-limited notification messages, and safely relocates players to avoid portal trap loops or void falls.
+- **Convenient Teleport**: Safe dimension teleportation command (`/dt <player> <dimension>`).
+- **Server-Side Only**: Runs entirely on the server. Clients do not need the mod installed.
 
 ---
 
-## 📜 Commands
+## Commands
 
 | Command | Description |
-| --- | --- |
+| :--- | :--- |
 | `/dimtoggle list` | View all currently locked dimensions, their lock durations, and remaining times. |
 | `/dimtoggle lock <dimension> [duration]` | Lock a dimension permanently or for a timed duration (e.g., `1d2h`, `30m`). |
 | `/dimtoggle unlock <dimension>` | Unlock a dimension for all players. |
@@ -86,7 +86,7 @@ DimToggle is a **server-side mod** (clients do not need to install it). Native b
 
 ---
 
-## ⚙️ Configuration (`config/dimtoggle.json`)
+## Configuration (`config/dimtoggle.json`)
 
 ```json
 {
@@ -113,6 +113,6 @@ DimToggle is a **server-side mod** (clients do not need to install it). Native b
 
 ---
 
-## 👥 Authors
+## Authors
 
 DimToggle is developed and maintained by **Kingodogo** and **KyroXova**.
