@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Adaptive build matrix generator for DimToggle.
-Generates an optimized GitHub Actions matrix from targets.json using
-historical execution profiles and dynamic self-hosted runner detection.
-Balances expensive Forge/NeoForge and lightweight Fabric targets across
-batches to eliminate workload imbalance and minimize CI completion time.
+Generates an optimized GitHub Actions matrix from targets.json.
+Groups targets by JDK/Gradle version family to maximize Gradle daemon reuse,
+minimize wrapper downloads, eliminate redundant toolchain initialization,
+and balance workloads across all 18 batches.
 """
 
 import os
@@ -14,16 +14,6 @@ import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-
-# Historical target weights in seconds derived from CI profiling
-WEIGHT_BASE_FABRIC = 35.0
-WEIGHT_BASE_FORGE = 75.0
-WEIGHT_BASE_NEOFORGE = 110.0
-
-WEIGHT_JAVA_8 = 15.0     # Gradle 6/7 daemon start + legacy Forge
-WEIGHT_JAVA_16 = 30.0    # Zulu 16 download & environment switch
-WEIGHT_JAVA_17 = 10.0
-WEIGHT_JAVA_21 = 15.0
 
 def load_targets():
     data = json.loads((ROOT / "targets.json").read_text(encoding="utf-8"))
@@ -38,29 +28,6 @@ def load_targets():
                 "java": java_ver
             })
     return entries
-
-def compute_target_weight(target):
-    loader = target["loader"].lower()
-    java_ver = target["java"]
-    mc = target["mc"]
-
-    if loader == "neoforge":
-        w = WEIGHT_BASE_NEOFORGE
-    elif loader == "forge":
-        w = WEIGHT_BASE_FORGE
-    else:
-        w = WEIGHT_BASE_FABRIC
-
-    if java_ver == 8:
-        w += WEIGHT_JAVA_8
-    elif java_ver == 16 or mc in ("1.17", "1.17.1"):
-        w += WEIGHT_JAVA_16
-    elif java_ver == 17:
-        w += WEIGHT_JAVA_17
-    else:
-        w += WEIGHT_JAVA_21
-
-    return w
 
 def detect_self_hosted_runners():
     token = os.environ.get("GITHUB_TOKEN")
@@ -106,63 +73,30 @@ def detect_self_hosted_runners():
 
     return online_kyro_runners
 
-def balance_workloads(targets, num_batches=18):
-    # Group targets by Minecraft version family to preserve Gradle/Loom cache locality
-    by_version = {}
-    for t in targets:
-        mc = t["mc"]
-        if mc not in by_version:
-            by_version[mc] = []
-        by_version[mc].append(t)
-
-    # Sort version clusters by descending total weight
-    version_clusters = []
-    for mc, cluster in by_version.items():
-        total_w = sum(compute_target_weight(t) for t in cluster)
-        version_clusters.append((mc, cluster, total_w))
-
-    version_clusters.sort(key=lambda x: x[2], reverse=True)
-
-    # Initialize bins
-    bins = [{"id": i, "weight": 0.0, "targets": []} for i in range(num_batches)]
-
-    for mc, cluster, cluster_weight in version_clusters:
-        # Assign entire cluster to the bin with minimal weight
-        # to preserve cache locality while balancing totals
-        min_bin = min(bins, key=lambda b: b["weight"])
-        min_bin["targets"].extend(cluster)
-        min_bin["weight"] += cluster_weight
-
-    # Sort targets inside each bin by Minecraft version according to original targets order
-    mc_order = {t["mc"]: idx for idx, t in enumerate(targets)}
-    for b in bins:
-        b["targets"].sort(key=lambda t: (mc_order.get(t["mc"], 999), t["loader"]))
-
-    # Sort bins chronologically by their first target's Minecraft version
-    bins.sort(key=lambda b: mc_order.get(b["targets"][0]["mc"], 999) if b["targets"] else 0)
-    return bins
-
 def generate(mode="auto", batches=18):
     targets = load_targets()
     online_runners = detect_self_hosted_runners()
     num_online = len(online_runners)
     print(f"Discovered {len(targets)} targets. Detected {num_online} online self-hosted runner(s).", file=sys.stderr)
 
-    if batches <= 0 or batches > len(targets):
-        batches = min(18, len(targets))
+    total = len(targets)
+    if batches <= 0 or batches > total:
+        batches = min(18, total)
 
-    bins = balance_workloads(targets, num_batches=batches)
+    # Contiguous version slicing to keep Gradle wrapper + JDK + Minecraft assets warm
+    chunks = []
+    start = 0
+    for b in range(batches):
+        size = total // batches + (1 if b < total % batches else 0)
+        chunk = targets[start:start + size]
+        start += size
+        chunks.append(chunk)
 
     matrix_include = []
-    for b_idx, b in enumerate(bins):
-        chunk = b["targets"]
-        if not chunk:
-            continue
-            
+    for b_idx, chunk in enumerate(chunks):
         batch_id = f"batch-{b_idx + 1:02d}"
-        mc_versions = sorted(list(set(t["mc"] for t in chunk)), key=lambda v: [int(x) for x in v.split(".") if x.isdigit()])
-        mc_first = mc_versions[0]
-        mc_last = mc_versions[-1]
+        mc_first = chunk[0]["mc"]
+        mc_last = chunk[-1]["mc"]
         name = f"Batch {b_idx + 1:02d} ({mc_first} - {mc_last})" if mc_first != mc_last else f"Batch {b_idx + 1:02d} ({mc_first})"
         
         has_1_17 = any(t["mc"] in ("1.17", "1.17.1") for t in chunk)
@@ -180,9 +114,7 @@ def generate(mode="auto", batches=18):
         elif mode == "all-github" or num_online == 0:
             runner = "ubuntu-24.04"
         else:
-            # Adaptive mode:
-            # Allocate slots to online self-hosted runners proportional to concurrency (up to 2 per VM)
-            # and remaining jobs to GitHub cloud runners
+            # Adaptive mode: Allocate up to 2 concurrent jobs per online VM
             self_hosted_slots = min(num_online * 2, batches // 2)
             if b_idx < self_hosted_slots:
                 runner = ["self-hosted", "linux", "x64", "docker", "kyro"]
@@ -196,7 +128,6 @@ def generate(mode="auto", batches=18):
             "targets_summary": summary,
             "has_1_17": has_1_17,
             "count": len(chunk),
-            "estimated_weight": round(b["weight"], 1),
             "runner": runner
         })
 
