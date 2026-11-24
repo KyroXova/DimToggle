@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class ServerPlayerMixin {
     @Inject(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", at = @At("HEAD"), cancellable = true)
     private void dimtoggle$beforeTravel(TeleportTransition transition, CallbackInfoReturnable<ServerPlayer> callback) {
-        if (transition != null && !FabricDimensionControl.mayTravel((ServerPlayer) (Object) this, transition.newLevel().dimension().location().toString()))
+        if (transition != null && !FabricDimensionControl.mayTravel((ServerPlayer) (Object) this, transition.newLevel().dimension().identifier().toString()))
             callback.setReturnValue(null);
     }
 }

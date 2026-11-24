@@ -192,7 +192,6 @@ public final class FabricDimensionControl {
 
             player.teleportTo(((ServerLevel) player.level()), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
-            player.hurtMarked = true;
             player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 45, 3, false, false, true));
             player.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0f, 0.6f);
             player.playSound(SoundEvents.ENDERMAN_TELEPORT, 0.8f, 0.5f);
