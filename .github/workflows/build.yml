@@ -41,6 +41,8 @@ jobs:
       total_batches: ${{ steps.gen.outputs.total_batches }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -63,6 +65,8 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -102,13 +106,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-          generate-job-summary: false
+          cache-read-only: false
+          add-job-summary: 'never'
 
       - name: Pre-warm Mojang Metadata
         run: |
-          curl -f -s -S --retry 5 --retry-delay 2 --max-time 30 https://launchermeta.mojang.com/mc/game/version_manifest_v2.json > /dev/null || true
-          curl -f -s -S --retry 5 --retry-delay 2 --max-time 30 https://piston-meta.mojang.com/mc/game/version_manifest_v2.json > /dev/null || true
+          (curl -f -s -S --retry 3 --max-time 15 https://launchermeta.mojang.com/mc/game/version_manifest_v2.json > /dev/null 2>&1 &)
+          (curl -f -s -S --retry 3 --max-time 15 https://piston-meta.mojang.com/mc/game/version_manifest_v2.json > /dev/null 2>&1 &)
+          wait
 
       - name: Build batch ${{ matrix.batch_id }}
         uses: nick-fields/retry@v3
