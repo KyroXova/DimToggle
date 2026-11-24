@@ -8,7 +8,7 @@ public final class SafeSpawn {
     private SafeSpawn() { }
 
     public static BlockPos find(ServerLevel level) {
-        BlockPos shared = level.getSharedSpawnPos();
+        BlockPos shared = level.getRespawnData().pos();
         int minBuild = level.getMinY();
         int maxBuild = level.getMaxY();
         for (int r = 0; r <= 8; r++) {

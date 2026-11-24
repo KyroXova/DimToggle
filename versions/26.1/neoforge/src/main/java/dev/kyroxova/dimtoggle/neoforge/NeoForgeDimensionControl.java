@@ -21,12 +21,12 @@ import java.util.HashSet;
 import java.util.logging.Logger;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -117,29 +117,29 @@ public final class NeoForgeDimensionControl {
             dimension,
             now,
             player.getStringUUID(),
-            player.getGameProfile().getName(),
+            player.getName().getString(),
             groups,
             permission,
-            player.hasPermissions(2),
+            player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER),
             player.isSpectator()
         );
     }
 
     private boolean checkPlayerCapacity(ServerPlayer player, String dimension) {
-        ServerLevel target = player.getServer().getLevel(ResourceKey.create(
+        ServerLevel target = ((ServerLevel) player.level()).getServer().getLevel(ResourceKey.create(
             net.minecraft.core.registries.Registries.DIMENSION,
-            ResourceLocation.parse(dimension)
+            Identifier.parse(dimension)
         ));
         int count = target != null ? target.players().size() : 0;
-        return AccessPolicy.checkCapacity(config, dimension, count, player.hasPermissions(2));
+        return AccessPolicy.checkCapacity(config, dimension, count, player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER));
     }
 
     private boolean checkPlayerMinLevel(ServerPlayer player, String dimension) {
-        return AccessPolicy.checkMinLevel(config, dimension, player.experienceLevel, player.hasPermissions(2));
+        return AccessPolicy.checkMinLevel(config, dimension, player.experienceLevel, player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER));
     }
 
     private boolean checkPlayerRequiredItem(ServerPlayer player, String dimension) {
-        if (player.hasPermissions(2) && config.allowOps) return true;
+        if (player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && config.allowOps) return true;
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return true;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
@@ -156,7 +156,7 @@ public final class NeoForgeDimensionControl {
     public void travel(EntityTravelToDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer)) return;
         ServerPlayer player = (ServerPlayer) event.getEntity();
-        String dimension = DimensionLocks.normalize(event.getDimension().location().toString());
+        String dimension = DimensionLocks.normalize(event.getDimension().identifier().toString());
         if (locks == null) {
             event.setCanceled(true);
             return;
@@ -199,7 +199,7 @@ public final class NeoForgeDimensionControl {
         if (!config.isConsumeItem(dimension)) return;
         String req = config.getRequiredItem(dimension);
         if (req == null || req.isEmpty()) return;
-        if (player.hasPermissions(2) && config.allowOps) return;
+        if (player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) && config.allowOps) return;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             net.minecraft.world.item.ItemStack stack = player.getInventory().getItem(i);
             if (!stack.isEmpty()) {
@@ -224,7 +224,7 @@ public final class NeoForgeDimensionControl {
     }
 
     private void bounceFromPortal(ServerPlayer player) {
-        player.getServer().execute(() -> {
+        ((ServerLevel) player.level()).getServer().execute(() -> {
             if (!player.isAlive()) return;
             double pushX = 0;
             double pushY = 0.35;
@@ -259,8 +259,8 @@ public final class NeoForgeDimensionControl {
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
             player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 45, 3, false, false, true));
-            player.playNotifySound(SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 1.0f, 0.6f);
-            player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
+            player.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0f, 0.6f);
+            player.playSound(SoundEvents.ENDERMAN_TELEPORT, 0.8f, 0.5f);
             try {
                 ((ServerLevel) player.level()).sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 ((ServerLevel) player.level()).sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
@@ -269,9 +269,9 @@ public final class NeoForgeDimensionControl {
     }
 
     private void safeTeleportToSpawn(ServerPlayer player) {
-        player.getServer().execute(() -> {
+        ((ServerLevel) player.level()).getServer().execute(() -> {
             if (!player.isAlive()) return;
-            ServerLevel spawnLevel = player.getServer().getLevel(Level.OVERWORLD);
+            ServerLevel spawnLevel = ((ServerLevel) player.level()).getServer().getLevel(Level.OVERWORLD);
             if (spawnLevel != null) {
                 if (((ServerLevel) player.level()) != spawnLevel && (locks == null || locks.isLocked("minecraft:overworld", System.currentTimeMillis()))) return;
                 BlockPos spawnPos = SafeSpawn.find(spawnLevel);
@@ -284,7 +284,7 @@ public final class NeoForgeDimensionControl {
     private void checkPlayerLocation(ServerPlayer player) {
         if (locks == null || player == null || !player.isAlive()) return;
         long now = System.currentTimeMillis();
-        String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
+        String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().identifier().toString());
         if (locks.isLocked(currentDim, now) && !isPlayerAllowed(player, currentDim, now)) {
             safeTeleportToSpawn(player);
             deny(player, currentDim, now, "§cYou are not allowed in " + currentDim + "!");
@@ -296,7 +296,7 @@ public final class NeoForgeDimensionControl {
         long now = System.currentTimeMillis();
         dimension = DimensionLocks.normalize(dimension);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
+            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().identifier().toString());
             if (currentDim.equals(dimension) && !isPlayerAllowed(player, dimension, now)) {
                 safeTeleportToSpawn(player);
                 player.sendSystemMessage(Component.literal("§cYou have been returned to spawn: " + dimension + " is locked!"));
@@ -337,84 +337,84 @@ public final class NeoForgeDimensionControl {
     @SubscribeEvent
     public void commands(RegisterCommandsEvent event) {
         LiteralCommandNode<CommandSourceStack> dimtoggleNode = event.getDispatcher().register(
-            Commands.literal("dimtoggle").requires(source -> source.hasPermission(2))
+            Commands.literal("dimtoggle").requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.literal("list").executes(context -> list(context.getSource())))
-                .then(Commands.literal("unlock").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> unlock(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString()))))
-                .then(Commands.literal("disable").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> unlock(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString()))))
-                .then(Commands.literal("enable").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> lock(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), null))))
-                .then(Commands.literal("lock").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> lock(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), null))
+                .then(Commands.literal("unlock").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> unlock(context.getSource(), IdentifierArgument.getId(context, "dimension").toString()))))
+                .then(Commands.literal("disable").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> unlock(context.getSource(), IdentifierArgument.getId(context, "dimension").toString()))))
+                .then(Commands.literal("enable").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> lock(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), null))))
+                .then(Commands.literal("lock").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> lock(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), null))
                     .then(Commands.argument("duration", StringArgumentType.word())
-                        .executes(context -> lock(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "duration"))))))
-                .then(Commands.literal("allow").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> lock(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "duration"))))))
+                .then(Commands.literal("allow").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("player", StringArgumentType.word())
-                        .executes(context -> allowUser(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
-                .then(Commands.literal("disallow").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> allowUser(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
+                .then(Commands.literal("disallow").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("player", StringArgumentType.word())
-                        .executes(context -> disallowUser(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
-                .then(Commands.literal("allowgroup").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> disallowUser(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
+                .then(Commands.literal("allowgroup").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("group", StringArgumentType.word())
-                        .executes(context -> allowGroup(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "group"))))))
-                .then(Commands.literal("disallowgroup").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> allowGroup(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "group"))))))
+                .then(Commands.literal("disallowgroup").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("group", StringArgumentType.word())
-                        .executes(context -> disallowGroup(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "group"))))))
+                        .executes(context -> disallowGroup(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "group"))))))
                 .then(Commands.literal("allowops")
                     .executes(context -> getAllowOps(context.getSource()))
                     .then(Commands.argument("enabled", BoolArgumentType.bool())
                         .executes(context -> setAllowOps(context.getSource(), BoolArgumentType.getBool(context, "enabled")))))
-                .then(Commands.literal("limit").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                .then(Commands.literal("limit").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("max", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1))
-                        .executes(context -> setLimit(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "max"))))))
-                .then(Commands.literal("unlimit").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> removeLimit(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString()))))
-                .then(Commands.literal("minlevel").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> setLimit(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "max"))))))
+                .then(Commands.literal("unlimit").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> removeLimit(context.getSource(), IdentifierArgument.getId(context, "dimension").toString()))))
+                .then(Commands.literal("minlevel").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("level", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0))
-                        .executes(context -> setMinLevel(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "level"))))))
-                .then(Commands.literal("requireitem").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> setMinLevel(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "level"))))))
+                .then(Commands.literal("requireitem").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("item", StringArgumentType.word())
-                        .executes(context -> setRequiredItem(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "item"))))))
-                .then(Commands.literal("clearitem").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> clearRequiredItem(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString()))))
+                        .executes(context -> setRequiredItem(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "item"))))))
+                .then(Commands.literal("clearitem").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> clearRequiredItem(context.getSource(), IdentifierArgument.getId(context, "dimension").toString()))))
                 .then(Commands.literal("info")
                     .executes(context -> info(context.getSource(), null))
-                    .then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                        .executes(context -> info(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString()))))
-                .then(Commands.literal("message").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> info(context.getSource(), IdentifierArgument.getId(context, "dimension").toString()))))
+                .then(Commands.literal("message").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("text", StringArgumentType.greedyString())
-                        .executes(context -> setMessage(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "text"))))))
-                .then(Commands.literal("clearmessage").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> clearMessage(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString()))))
-                .then(Commands.literal("pass").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> setMessage(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "text"))))))
+                .then(Commands.literal("clearmessage").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> clearMessage(context.getSource(), IdentifierArgument.getId(context, "dimension").toString()))))
+                .then(Commands.literal("pass").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("player", StringArgumentType.word())
                         .then(Commands.argument("duration", StringArgumentType.word())
-                            .executes(context -> addPass(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"), StringArgumentType.getString(context, "duration")))))))
-                .then(Commands.literal("revoke").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                            .executes(context -> addPass(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"), StringArgumentType.getString(context, "duration")))))))
+                .then(Commands.literal("revoke").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("player", StringArgumentType.word())
-                        .executes(context -> revokePass(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
+                        .executes(context -> revokePass(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
                 .then(Commands.literal("allowspectators")
                     .executes(context -> getAllowSpectators(context.getSource()))
                     .then(Commands.argument("enabled", BoolArgumentType.bool())
                         .executes(context -> setAllowSpectators(context.getSource(), BoolArgumentType.getBool(context, "enabled")))))
-                .then(Commands.literal("consumeitem").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                .then(Commands.literal("consumeitem").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("enabled", BoolArgumentType.bool())
-                        .executes(context -> setConsumeItem(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), BoolArgumentType.getBool(context, "enabled"))))))
-                .then(Commands.literal("evict").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                    .executes(context -> evict(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), false))
+                        .executes(context -> setConsumeItem(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), BoolArgumentType.getBool(context, "enabled"))))))
+                .then(Commands.literal("evict").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .executes(context -> evict(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), false))
                     .then(Commands.literal("all")
-                        .executes(context -> evict(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), true)))))
+                        .executes(context -> evict(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), true)))))
                 .then(Commands.literal("check").then(Commands.argument("player", StringArgumentType.word())
-                    .then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
-                        .executes(context -> checkPlayer(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
-                .then(Commands.literal("broadcast").then(Commands.argument("dimension", ResourceLocationArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                    .then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
+                        .executes(context -> checkPlayer(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "player"))))))
+                .then(Commands.literal("broadcast").then(Commands.argument("dimension", IdentifierArgument.id()).suggests((ctx, b) -> { b.suggest("minecraft:overworld"); b.suggest("minecraft:the_nether"); b.suggest("minecraft:the_end"); return b.buildFuture(); })
                     .then(Commands.argument("message", StringArgumentType.greedyString())
-                        .executes(context -> broadcastToDim(context.getSource(), ResourceLocationArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "message"))))))
+                        .executes(context -> broadcastToDim(context.getSource(), IdentifierArgument.getId(context, "dimension").toString(), StringArgumentType.getString(context, "message"))))))
                 .then(Commands.literal("reload").executes(context -> reloadConfig(context.getSource())))
         );
 
-        event.getDispatcher().register(Commands.literal("dt").requires(source -> source.hasPermission(2)).redirect(dimtoggleNode));
+        event.getDispatcher().register(Commands.literal("dt").requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)).redirect(dimtoggleNode));
     }
 
 
@@ -625,7 +625,7 @@ public final class NeoForgeDimensionControl {
         int onlineInDim = 0;
         if (server != null) {
             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                String pDim = DimensionLocks.normalize(((ServerLevel) p.level()).dimension().location().toString());
+                String pDim = DimensionLocks.normalize(((ServerLevel) p.level()).dimension().identifier().toString());
                 if (pDim.equals(dimension)) onlineInDim++;
             }
         }
@@ -760,7 +760,7 @@ public final class NeoForgeDimensionControl {
         long now = System.currentTimeMillis();
         int count = 0;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
+            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().identifier().toString());
             if (currentDim.equals(dimension)) {
                 if (evictAll || !isPlayerAllowed(player, dimension, now)) {
                     safeTeleportToSpawn(player);
@@ -779,7 +779,7 @@ public final class NeoForgeDimensionControl {
         MinecraftServer server = source.getServer();
         ServerPlayer targetPlayer = null;
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            if (p.getGameProfile().getName().equalsIgnoreCase(playerName)) {
+            if (p.getName().getString().equalsIgnoreCase(playerName)) {
                 targetPlayer = p;
                 break;
             }
@@ -794,7 +794,7 @@ public final class NeoForgeDimensionControl {
         boolean capOk = checkPlayerCapacity(targetPlayer, dimension);
         boolean lvlOk = checkPlayerMinLevel(targetPlayer, dimension);
         boolean itemOk = checkPlayerRequiredItem(targetPlayer, dimension);
-        boolean pass = config.hasPass(dimension, targetPlayer.getStringUUID(), targetPlayer.getGameProfile().getName(), now);
+        boolean pass = config.hasPass(dimension, targetPlayer.getStringUUID(), targetPlayer.getName().getString(), now);
 
         StringBuilder sb = new StringBuilder();
         sb.append("§6=== [ DimToggle Access Check: §f").append(playerName).append(" -> ").append(dimension).append(" §6] ===");
@@ -820,7 +820,7 @@ public final class NeoForgeDimensionControl {
         MinecraftServer server = source.getServer();
         int count = 0;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
+            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().identifier().toString());
             if (currentDim.equals(dimension)) {
                 player.sendSystemMessage(Component.literal("§6[" + dimension + "] §f" + message));
                 count++;

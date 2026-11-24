@@ -117,7 +117,7 @@ public final class NeoForgeDimensionControl {
             dimension,
             now,
             player.getStringUUID(),
-            player.getGameProfile().getName(),
+            player.getName().getString(),
             groups,
             permission,
             player.hasPermissions(2),
@@ -126,7 +126,7 @@ public final class NeoForgeDimensionControl {
     }
 
     private boolean checkPlayerCapacity(ServerPlayer player, String dimension) {
-        ServerLevel target = player.getServer().getLevel(ResourceKey.create(
+        ServerLevel target = ((ServerLevel) player.level()).getServer().getLevel(ResourceKey.create(
             net.minecraft.core.registries.Registries.DIMENSION,
             ResourceLocation.parse(dimension)
         ));
@@ -224,7 +224,7 @@ public final class NeoForgeDimensionControl {
     }
 
     private void bounceFromPortal(ServerPlayer player) {
-        player.getServer().execute(() -> {
+        ((ServerLevel) player.level()).getServer().execute(() -> {
             if (!player.isAlive()) return;
             double pushX = 0;
             double pushY = 0.35;
@@ -269,9 +269,9 @@ public final class NeoForgeDimensionControl {
     }
 
     private void safeTeleportToSpawn(ServerPlayer player) {
-        player.getServer().execute(() -> {
+        ((ServerLevel) player.level()).getServer().execute(() -> {
             if (!player.isAlive()) return;
-            ServerLevel spawnLevel = player.getServer().getLevel(Level.OVERWORLD);
+            ServerLevel spawnLevel = ((ServerLevel) player.level()).getServer().getLevel(Level.OVERWORLD);
             if (spawnLevel != null) {
                 if (((ServerLevel) player.level()) != spawnLevel && (locks == null || locks.isLocked("minecraft:overworld", System.currentTimeMillis()))) return;
                 BlockPos spawnPos = SafeSpawn.find(spawnLevel);
@@ -779,7 +779,7 @@ public final class NeoForgeDimensionControl {
         MinecraftServer server = source.getServer();
         ServerPlayer targetPlayer = null;
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            if (p.getGameProfile().getName().equalsIgnoreCase(playerName)) {
+            if (p.getName().getString().equalsIgnoreCase(playerName)) {
                 targetPlayer = p;
                 break;
             }
@@ -794,7 +794,7 @@ public final class NeoForgeDimensionControl {
         boolean capOk = checkPlayerCapacity(targetPlayer, dimension);
         boolean lvlOk = checkPlayerMinLevel(targetPlayer, dimension);
         boolean itemOk = checkPlayerRequiredItem(targetPlayer, dimension);
-        boolean pass = config.hasPass(dimension, targetPlayer.getStringUUID(), targetPlayer.getGameProfile().getName(), now);
+        boolean pass = config.hasPass(dimension, targetPlayer.getStringUUID(), targetPlayer.getName().getString(), now);
 
         StringBuilder sb = new StringBuilder();
         sb.append("§6=== [ DimToggle Access Check: §f").append(playerName).append(" -> ").append(dimension).append(" §6] ===");
