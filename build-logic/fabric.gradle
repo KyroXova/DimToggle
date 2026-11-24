@@ -7,11 +7,11 @@ dependencies {
     if (!targetMinecraft.startsWith('26.')) {
         mappings loom.officialMojangMappings()
     }
-    if (targetMinecraft.startsWith('26.') || targetMinecraft == '1.21.11') {
-        modImplementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
+    if (targetMinecraft.startsWith('26.')) {
+        implementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
     } else {
         modImplementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
-        if (targetPins.getProperty('fabric.api')) {
+        if (targetPins.getProperty('fabric.api') && targetMinecraft != '1.21.11') {
             modImplementation "net.fabricmc.fabric-api:fabric-api:${targetPins.getProperty('fabric.api')}"
         }
     }
