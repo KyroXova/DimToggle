@@ -35,6 +35,14 @@ env:
 jobs:
   generate-matrix:
     name: Generate Matrix
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       (contains(github.event.head_commit.message, '(#') ||
+        contains(github.event.head_commit.message, 'Merge pull request #') ||
+        contains(github.event.head_commit.message, 'Merge branch ')))
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.gen.outputs.matrix }}
