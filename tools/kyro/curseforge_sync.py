@@ -299,10 +299,10 @@ def main():
 
     print(f"Starting CurseForge release sync for DimToggle {mod_version} (Project ID: {project_id})...")
 
-    # 1. Update Project Description from README
-    readme_path = "README.md"
-    if os.path.exists(readme_path):
-        with open(readme_path, "r", encoding="utf-8") as f:
+    # 1. Update Project Description
+    desc_path = "Curseforge-desc.md" if os.path.exists("Curseforge-desc.md") else "README.md"
+    if os.path.exists(desc_path):
+        with open(desc_path, "r", encoding="utf-8") as f:
             description = f.read()
         sync_description(token, project_id, description)
 

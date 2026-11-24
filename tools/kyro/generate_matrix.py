@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Dynamic build matrix generator for DimToggle.
-Generates an optimized GitHub Actions matrix from targets.json,
-dynamically grouping targets into balanced batches to reuse VMs
-and stay strictly under the 20 concurrent job limit.
+Adaptive build matrix generator for DimToggle.
+Generates an optimized GitHub Actions matrix from targets.json.
+Groups targets by JDK/Gradle version family to maximize Gradle daemon reuse,
+minimize wrapper downloads, eliminate redundant toolchain initialization,
+and balance workloads across all 18 batches.
 """
 
-import json
 import os
 import sys
-import random
+import json
 import argparse
 from pathlib import Path
 
@@ -29,50 +29,61 @@ def load_targets():
             })
     return entries
 
-def count_self_hosted_runners():
+def detect_self_hosted_runners():
     token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY", "KyroXova/DimToggle")
-    if not token:
+    
+    runners_data = []
+    if token:
+        import urllib.request
+        url = f"https://api.github.com/repos/{repo}/actions/runners"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "DimToggle-Adaptive-Matrix"
+        }
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                runners_data = data.get("runners", [])
+        except Exception as e:
+            print(f"Notice: Failed to fetch runners via GitHub API token: {e}", file=sys.stderr)
+            
+    if not runners_data:
         import shutil, subprocess
         if shutil.which("gh"):
             try:
                 res = subprocess.run(
-                    ["gh", "api", f"repos/{repo}/actions/runners", "--jq", ".runners | map(select(.status == \"online\")) | length"],
-                    capture_output=True, text=True, timeout=10
+                    ["gh", "api", f"repos/{repo}/actions/runners", "--jq", ".runners"],
+                    capture_output=True, text=True, timeout=8
                 )
-                if res.returncode == 0 and res.stdout.strip().isdigit():
-                    return int(res.stdout.strip())
+                if res.returncode == 0:
+                    runners_data = json.loads(res.stdout)
             except Exception:
                 pass
-        return 0
 
-    import urllib.request
-    url = f"https://api.github.com/repos/{repo}/actions/runners"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "DimToggle-Matrix-Generator"
-    }
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            runners = data.get("runners", [])
-            online = sum(1 for r in runners if r.get("status") == "online")
-            return online
-    except Exception as e:
-        print(f"Notice: Could not query GitHub runners API: {e}", file=sys.stderr)
-        return 0
+    online_kyro_runners = []
+    for r in runners_data:
+        if r.get("status") == "online":
+            labels = [lbl.get("name", "").lower() for lbl in r.get("labels", [])]
+            name = r.get("name", "").lower()
+            if "kyro" in labels or "docker" in labels or "dimtoggle" in name:
+                online_kyro_runners.append(r)
 
-def generate(mode="auto", batches=18, gh_share=20):
+    return online_kyro_runners
+
+def generate(mode="auto", batches=18):
     targets = load_targets()
-    online_self_hosted = count_self_hosted_runners()
-    print(f"Discovered {len(targets)} targets in targets.json. Online self-hosted runners: {online_self_hosted}", file=sys.stderr)
+    online_runners = detect_self_hosted_runners()
+    num_online = len(online_runners)
+    print(f"Discovered {len(targets)} targets. Detected {num_online} online self-hosted runner(s).", file=sys.stderr)
 
     total = len(targets)
     if batches <= 0 or batches > total:
         batches = min(18, total)
 
+    # Contiguous version slicing to keep Gradle wrapper + JDK + Minecraft assets warm
     chunks = []
     start = 0
     for b in range(batches):
@@ -93,15 +104,22 @@ def generate(mode="auto", batches=18, gh_share=20):
         tasks_str = " ".join(tasks_list)
         summary = ", ".join([f"{t['mc']} ({t['loader']})" for t in chunk])
 
-        if mode == "all-local" and online_self_hosted > 0:
-            runner = ["self-hosted", "linux", "x64", "docker", "kyro"]
-        elif mode == "all-github" or online_self_hosted == 0:
+        # Runner selection logic
+        if mode == "all-local":
+            if num_online > 0:
+                runner = ["self-hosted", "linux", "x64", "docker", "kyro"]
+            else:
+                print("Warning: all-local requested but no self-hosted runners online; falling back to ubuntu-24.04", file=sys.stderr)
+                runner = "ubuntu-24.04"
+        elif mode == "all-github" or num_online == 0:
             runner = "ubuntu-24.04"
         else:
-            if b_idx < gh_share:
-                runner = "ubuntu-24.04"
-            else:
+            # Adaptive mode: Allocate up to 2 concurrent jobs per online VM
+            self_hosted_slots = min(num_online * 2, batches // 2)
+            if b_idx < self_hosted_slots:
                 runner = ["self-hosted", "linux", "x64", "docker", "kyro"]
+            else:
+                runner = "ubuntu-24.04"
 
         matrix_include.append({
             "batch_id": batch_id,
@@ -116,14 +134,13 @@ def generate(mode="auto", batches=18, gh_share=20):
     return {"include": matrix_include}
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate dynamic GitHub Actions matrix with batching")
-    parser.add_argument("--mode", choices=["auto", "all-github", "all-local", "split"], default="auto")
-    parser.add_argument("--batches", type=int, default=18, help="Number of balanced batches (default: 18, range 16-20)")
-    parser.add_argument("--gh-share", type=int, default=20, help="Number of batches assigned to GitHub cloud runners (default: 20)")
+    parser = argparse.ArgumentParser(description="Generate adaptive GitHub Actions matrix with load balancing")
+    parser.add_argument("--mode", choices=["auto", "all-github", "all-local"], default="auto")
+    parser.add_argument("--batches", type=int, default=18, help="Number of balanced batches (default: 18)")
     parser.add_argument("--output-file", type=str, default=None)
     args = parser.parse_args()
 
-    matrix = generate(mode=args.mode, batches=args.batches, gh_share=args.gh_share)
+    matrix = generate(mode=args.mode, batches=args.batches)
     matrix_json = json.dumps(matrix)
 
     gh_output = os.environ.get("GITHUB_OUTPUT")
@@ -131,7 +148,7 @@ def main():
         with open(gh_output, "a", encoding="utf-8") as f:
             f.write(f"matrix={matrix_json}\n")
             f.write(f"total_batches={len(matrix['include'])}\n")
-        print(f"Emitted matrix with {len(matrix['include'])} batches to $GITHUB_OUTPUT", file=sys.stderr)
+        print(f"Emitted balanced matrix with {len(matrix['include'])} batches to $GITHUB_OUTPUT", file=sys.stderr)
     elif args.output_file:
         Path(args.output_file).write_text(matrix_json, encoding="utf-8")
         print(f"Wrote matrix to {args.output_file}", file=sys.stderr)

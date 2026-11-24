@@ -11,7 +11,7 @@ dependencies {
         implementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
     } else {
         modImplementation "net.fabricmc:fabric-loader:${targetPins.getProperty('fabric.version')}"
-        if (targetPins.getProperty('fabric.api')) {
+        if (targetPins.getProperty('fabric.api') && targetMinecraft != '1.21.11') {
             modImplementation "net.fabricmc.fabric-api:fabric-api:${targetPins.getProperty('fabric.api')}"
         }
     }
