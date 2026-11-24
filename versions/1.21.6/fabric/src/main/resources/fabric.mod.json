@@ -18,5 +18,8 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "1.21.6"
-  }
+  },
+  "mixins": [
+    "dimtoggle.mixins.json"
+  ]
 }

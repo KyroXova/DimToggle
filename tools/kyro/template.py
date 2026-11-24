@@ -67,7 +67,10 @@ def gradle(arguments):
     (project_root / 'settings.gradle').write_text(f"rootProject.name = '{mod_name}-{mc}-{loader}'\n", encoding='utf-8')
     (project_root / 'build.gradle').write_bytes((ROOT / 'build-logic/target.gradle').read_bytes())
     (project_root / 'gradle.properties').write_bytes((ROOT / 'gradle.properties').read_bytes())
-    command = [str(executable),'-Djava.net.preferIPv4Stack=true','-Dsun.net.client.defaultConnectTimeout=60000','-Dsun.net.client.defaultReadTimeout=120000','-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments]
+    command = [str(executable),'-Djava.net.preferIPv4Stack=true','-Dsun.net.client.defaultConnectTimeout=60000','-Dsun.net.client.defaultReadTimeout=120000','-Dorg.gradle.java.installations.fromEnv=JAVA_8_HOME,JAVA_16_HOME,JAVA_17_HOME,JAVA_21_HOME,JAVA_25_HOME']
+    if 'JAVA_8_HOME' in env:
+        command.append(f'-Dorg.gradle.java.installations.paths={env["JAVA_8_HOME"]}')
+    command.extend(['-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments])
     process = subprocess.Popen(command,cwd=ROOT,env=env)
     if os.name == 'nt':
         try:
