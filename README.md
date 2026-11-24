@@ -21,55 +21,6 @@
 
 ---
 
-## Supported Versions
-
-DimToggle is a server-side mod (clients do not need to install it). Native builds are provided across all supported releases:
-
-| Minecraft Version | Fabric | Forge | NeoForge | Side |
-| :--- | :---: | :---: | :---: | :---: |
-| **1.16** | ✓ | ✗ | ✗ | Server-side |
-| **1.16.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.2** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.3** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.4** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.5** | ✓ | ✓ | ✗ | Server-side |
-| **1.17** | ✓ | ✗ | ✗ | Server-side |
-| **1.17.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.18** | ✓ | ✓ | ✗ | Server-side |
-| **1.18.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.18.2** | ✓ | ✓ | ✗ | Server-side |
-| **1.19** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.2** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.3** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.4** | ✓ | ✓ | ✗ | Server-side |
-| **1.20** | ✓ | ✓ | ✗ | Server-side |
-| **1.20.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.20.2** | ✓ | ✓ | ✓ | Server-side |
-| **1.20.3** | ✓ | ✓ | ✓ | Server-side |
-| **1.20.4** | ✓ | ✓ | ✓ | Server-side |
-| **1.20.5** | ✓ | ✗ | ✓ | Server-side |
-| **1.20.6** | ✓ | ✓ | ✓ | Server-side |
-| **1.21** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.1** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.2** | ✓ | ✗ | ✓ | Server-side |
-| **1.21.3** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.4** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.5** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.6** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.7** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.8** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.9** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.10** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.11** | ✓ | ✓ | ✓ | Server-side |
-| **26.1** | ✓ | ✓ | ✓ | Server-side |
-| **26.1.1** | ✓ | ✓ | ✓ | Server-side |
-| **26.1.2** | ✓ | ✓ | ✓ | Server-side |
-| **26.2** | ✓ | ✓ | ✓ | Server-side |
-| **26.3** | ✓ | ✓ | ✓ | Server-side |
-
----
-
 ## Commands & Permissions
 
 All administrative commands require permission level 2 (Operators) or the `dimtoggle.admin` permission node.
@@ -118,7 +69,8 @@ All administrative commands require permission level 2 (Operators) or the `dimto
       "vip",
       "donator"
     ]
-  }
+  },
+  "notificationCooldownSeconds": 3
 }
 ```
 
@@ -128,6 +80,56 @@ All administrative commands require permission level 2 (Operators) or the `dimto
 - **`restrictedDimensions`**: Initial list of locked dimensions for newly created worlds.
 - **`allowedUsers`**: Map of dimension identifiers to lists of explicitly allowed player names.
 - **`allowedGroups`**: Map of dimension identifiers to lists of explicitly allowed group/team names.
+- **`notificationCooldownSeconds`**: Cooldown interval between warning notifications when unauthorized players attempt entry.
+
+---
+
+## Supported Versions
+
+DimToggle is a server-side mod (clients do not need to install it). Native builds are provided across all supported releases:
+
+| Minecraft Version | Fabric | Forge | NeoForge | Side |
+| :--- | :---: | :---: | :---: | :---: |
+| **1.16** | ✓ | ✗ | ✗ | Server-side |
+| **1.16.1** | ✓ | ✓ | ✗ | Server-side |
+| **1.16.2** | ✓ | ✓ | ✗ | Server-side |
+| **1.16.3** | ✓ | ✓ | ✗ | Server-side |
+| **1.16.4** | ✓ | ✓ | ✗ | Server-side |
+| **1.16.5** | ✓ | ✓ | ✗ | Server-side |
+| **1.17** | ✓ | ✗ | ✗ | Server-side |
+| **1.17.1** | ✓ | ✓ | ✗ | Server-side |
+| **1.18** | ✓ | ✓ | ✗ | Server-side |
+| **1.18.1** | ✓ | ✓ | ✗ | Server-side |
+| **1.18.2** | ✓ | ✓ | ✗ | Server-side |
+| **1.19** | ✓ | ✓ | ✗ | Server-side |
+| **1.19.1** | ✓ | ✓ | ✗ | Server-side |
+| **1.19.2** | ✓ | ✓ | ✗ | Server-side |
+| **1.19.3** | ✓ | ✓ | ✗ | Server-side |
+| **1.19.4** | ✓ | ✓ | ✗ | Server-side |
+| **1.20** | ✓ | ✓ | ✗ | Server-side |
+| **1.20.1** | ✓ | ✓ | ✗ | Server-side |
+| **1.20.2** | ✓ | ✓ | ✓ | Server-side |
+| **1.20.3** | ✓ | ✓ | ✓ | Server-side |
+| **1.20.4** | ✓ | ✓ | ✓ | Server-side |
+| **1.20.5** | ✓ | ✗ | ✓ | Server-side |
+| **1.20.6** | ✓ | ✓ | ✓ | Server-side |
+| **1.21** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.1** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.2** | ✓ | ✗ | ✓ | Server-side |
+| **1.21.3** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.4** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.5** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.6** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.7** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.8** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.9** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.10** | ✓ | ✓ | ✓ | Server-side |
+| **1.21.11** | ✓ | ✓ | ✓ | Server-side |
+| **26.1** | ✓ | ✓ | ✓ | Server-side |
+| **26.1.1** | ✓ | ✓ | ✓ | Server-side |
+| **26.1.2** | ✓ | ✓ | ✓ | Server-side |
+| **26.2** | ✓ | ✓ | ✓ | Server-side |
+| **26.3** | ✓ | ✓ | ✓ | Server-side |
 
 ---
 
