@@ -84,60 +84,52 @@ All administrative commands require permission level 2 (Operators) or the `dimto
 
 ---
 
-## Releases & Navigation
+## Supported Versions & Downloads
 
-| Release | Type | Coverage | Changelog | Direct Downloads | CurseForge |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| [**v2.0.0**](https://github.com/KyroXova/DimToggle/releases/tag/v2.0.0) | Production Release | 40 Versions (98 Targets) | [changelog_1.0.0_to_2.0.0.md](changelogs/changelog_1.0.0_to_2.0.0.md) | [98 Asset JARs](https://github.com/KyroXova/DimToggle/releases/tag/v2.0.0) | [CurseForge Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+DimToggle is a server-side mod (clients do not need to install it). All 98 native builds across 40 Minecraft versions are released under [**Release v2.0.0**](https://github.com/KyroXova/DimToggle/releases/tag/v2.0.0) ([Full Changelog](changelogs/changelog_1.0.0_to_2.0.0.md) | [CurseForge Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files)):
 
----
-
-## Supported Versions
-
-DimToggle is a server-side mod (clients do not need to install it). Native builds are provided across all supported releases:
-
-| Minecraft Version | Fabric | Forge | NeoForge | Side |
-| :--- | :---: | :---: | :---: | :---: |
-| **1.16** | ✓ | ✗ | ✗ | Server-side |
-| **1.16.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.2** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.3** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.4** | ✓ | ✓ | ✗ | Server-side |
-| **1.16.5** | ✓ | ✓ | ✗ | Server-side |
-| **1.17** | ✓ | ✗ | ✗ | Server-side |
-| **1.17.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.18** | ✓ | ✓ | ✗ | Server-side |
-| **1.18.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.18.2** | ✓ | ✓ | ✗ | Server-side |
-| **1.19** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.2** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.3** | ✓ | ✓ | ✗ | Server-side |
-| **1.19.4** | ✓ | ✓ | ✗ | Server-side |
-| **1.20** | ✓ | ✓ | ✗ | Server-side |
-| **1.20.1** | ✓ | ✓ | ✗ | Server-side |
-| **1.20.2** | ✓ | ✓ | ✓ | Server-side |
-| **1.20.3** | ✓ | ✓ | ✓ | Server-side |
-| **1.20.4** | ✓ | ✓ | ✓ | Server-side |
-| **1.20.5** | ✓ | ✗ | ✓ | Server-side |
-| **1.20.6** | ✓ | ✓ | ✓ | Server-side |
-| **1.21** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.1** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.2** | ✓ | ✗ | ✓ | Server-side |
-| **1.21.3** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.4** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.5** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.6** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.7** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.8** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.9** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.10** | ✓ | ✓ | ✓ | Server-side |
-| **1.21.11** | ✓ | ✓ | ✓ | Server-side |
-| **26.1** | ✓ | ✓ | ✓ | Server-side |
-| **26.1.1** | ✓ | ✓ | ✓ | Server-side |
-| **26.1.2** | ✓ | ✓ | ✓ | Server-side |
-| **26.2** | ✓ | ✓ | ✓ | Server-side |
-| **26.3** | ✓ | ✓ | ✓ | Server-side |
+| Minecraft | Side | Loaders | Direct Downloads (v2.0.0) | CurseForge |
+| :--- | :---: | :--- | :--- | :---: |
+| **1.16** | Server-side | `Fabric` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16-fabric-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.16.1** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.1-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.16.2** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.2-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.2-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.16.3** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.3-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.3-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.16.4** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.4-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.4-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.16.5** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.5-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.16.5-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.17** | Server-side | `Fabric` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.17-fabric-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.17.1** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.17.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.17.1-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.18** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.18-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.18-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.18.1** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.18.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.18.1-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.18.2** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.18.2-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.18.2-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.19** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.19.1** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.1-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.19.2** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.2-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.2-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.19.3** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.3-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.3-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.19.4** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.4-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.19.4-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20.1** | Server-side | `Fabric` `Forge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.1-forge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20.2** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.2-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.2-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.2-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20.3** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.3-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.3-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.3-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20.4** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.4-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.4-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.4-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20.5** | Server-side | `Fabric` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.5-fabric-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.5-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.20.6** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.6-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.6-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.20.6-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.1** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.1-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.1-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.2** | Server-side | `Fabric` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.2-fabric-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.2-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.3** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.3-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.3-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.3-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.4** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.4-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.4-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.4-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.5** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.5-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.5-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.5-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.6** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.6-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.6-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.6-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.7** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.7-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.7-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.7-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.8** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.8-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.8-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.8-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.9** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.9-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.9-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.9-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.10** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.10-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.10-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.10-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **1.21.11** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.11-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.11-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-1.21.11-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **26.1** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **26.1.1** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1.1-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1.1-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1.1-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **26.1.2** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1.2-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1.2-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.1.2-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **26.2** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.2-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.2-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.2-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+| **26.3** | Server-side | `Fabric` `Forge` `NeoForge` | [Fabric](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.3-fabric-2.0.0.jar) · [Forge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.3-forge-2.0.0.jar) · [NeoForge](https://github.com/KyroXova/DimToggle/releases/download/v2.0.0/dimtoggle-26.3-neoforge-2.0.0.jar) | [Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
 
 ---
 

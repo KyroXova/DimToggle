@@ -231,9 +231,9 @@ public final class ForgeDimensionControl {
             double pushZ = 0;
 
             BlockPos pos = player.blockPosition();
-            BlockState state = player.serverLevel().getBlockState(pos);
+            BlockState state = ((ServerLevel) player.level()).getBlockState(pos);
             if (!state.is(Blocks.NETHER_PORTAL) && !state.is(Blocks.END_PORTAL)) {
-                state = player.serverLevel().getBlockState(pos.below());
+                state = ((ServerLevel) player.level()).getBlockState(pos.below());
             }
 
             if (state.is(Blocks.NETHER_PORTAL)) {
@@ -255,15 +255,15 @@ public final class ForgeDimensionControl {
             double targetY = player.getY() + pushY;
             double targetZ = player.getZ() + pushZ;
 
-            player.teleportTo(player.serverLevel(), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);
+            player.teleportTo(((ServerLevel) player.level()), targetX, targetY, targetZ, java.util.Collections.emptySet(), player.getYRot(), -10.0f, false);
             player.setDeltaMovement(pushX * 0.32, 0.35, pushZ * 0.32);
             player.hurtMarked = true;
             player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 45, 3, false, false, true));
             player.playNotifySound(SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 1.0f, 0.6f);
             player.playNotifySound(SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8f, 0.5f);
             try {
-                player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
-                player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
+                ((ServerLevel) player.level()).sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
+                ((ServerLevel) player.level()).sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.3, 0.3, 0.3, 0.2);
             } catch (Exception ignored) { }
         });
     }
@@ -273,7 +273,7 @@ public final class ForgeDimensionControl {
             if (!player.isAlive()) return;
             ServerLevel spawnLevel = player.getServer().getLevel(Level.OVERWORLD);
             if (spawnLevel != null) {
-                if (player.serverLevel() != spawnLevel && (locks == null || locks.isLocked("minecraft:overworld", System.currentTimeMillis()))) return;
+                if (((ServerLevel) player.level()) != spawnLevel && (locks == null || locks.isLocked("minecraft:overworld", System.currentTimeMillis()))) return;
                 BlockPos spawnPos = SafeSpawn.find(spawnLevel);
                 if (spawnPos == null) return;
                 player.teleportTo(spawnLevel, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, java.util.Collections.emptySet(), player.getYRot(), player.getXRot(), false);
@@ -284,7 +284,7 @@ public final class ForgeDimensionControl {
     private void checkPlayerLocation(ServerPlayer player) {
         if (locks == null || player == null || !player.isAlive()) return;
         long now = System.currentTimeMillis();
-        String currentDim = DimensionLocks.normalize(player.serverLevel().dimension().location().toString());
+        String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
         if (locks.isLocked(currentDim, now) && !isPlayerAllowed(player, currentDim, now)) {
             safeTeleportToSpawn(player);
             deny(player, currentDim, now, "§cYou are not allowed in " + currentDim + "!");
@@ -296,7 +296,7 @@ public final class ForgeDimensionControl {
         long now = System.currentTimeMillis();
         dimension = DimensionLocks.normalize(dimension);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            String currentDim = DimensionLocks.normalize(player.serverLevel().dimension().location().toString());
+            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
             if (currentDim.equals(dimension) && !isPlayerAllowed(player, dimension, now)) {
                 safeTeleportToSpawn(player);
                 player.sendSystemMessage(Component.literal("§cYou have been returned to spawn: " + dimension + " is locked!"));
@@ -625,7 +625,7 @@ public final class ForgeDimensionControl {
         int onlineInDim = 0;
         if (server != null) {
             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                String pDim = DimensionLocks.normalize(p.serverLevel().dimension().location().toString());
+                String pDim = DimensionLocks.normalize(((ServerLevel) p.level()).dimension().location().toString());
                 if (pDim.equals(dimension)) onlineInDim++;
             }
         }
@@ -760,7 +760,7 @@ public final class ForgeDimensionControl {
         long now = System.currentTimeMillis();
         int count = 0;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            String currentDim = DimensionLocks.normalize(player.serverLevel().dimension().location().toString());
+            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
             if (currentDim.equals(dimension)) {
                 if (evictAll || !isPlayerAllowed(player, dimension, now)) {
                     safeTeleportToSpawn(player);
@@ -820,7 +820,7 @@ public final class ForgeDimensionControl {
         MinecraftServer server = source.getServer();
         int count = 0;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            String currentDim = DimensionLocks.normalize(player.serverLevel().dimension().location().toString());
+            String currentDim = DimensionLocks.normalize(((ServerLevel) player.level()).dimension().location().toString());
             if (currentDim.equals(dimension)) {
                 player.sendSystemMessage(Component.literal("§6[" + dimension + "] §f" + message));
                 count++;
