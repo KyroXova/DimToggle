@@ -301,9 +301,9 @@ public final class ForgeDimensionControl {
     }
 
     @SubscribeEvent
-    public void tick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || locks == null || ++ticks % 20 != 0) return;
-        MinecraftServer server = event.getServer();
+    public void tick(TickEvent.ServerTickEvent.Post event) {
+        if (locks == null || ++ticks % 20 != 0) return;
+        MinecraftServer server = event.server();
         if (server == null) return;
         long now = System.currentTimeMillis();
         try {
