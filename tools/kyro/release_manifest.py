@@ -189,28 +189,24 @@ def generate_checksums_md(manifest):
     return '\n'.join(lines)
 
 def update_readme_table(manifest, readme_path=None):
-    if readme_path is None:
-        readme_path = ROOT / "README.md"
-    
+    """Updates RELEASES.md download matrix table and ensures Release Index stays capped at <= 3 entries."""
     matrix_md = generate_download_matrix_md(manifest)
-    
-    content = Path(readme_path).read_text(encoding="utf-8")
-    
-    # Locate table section
-    start_marker = "## Supported Versions & Downloads"
-    end_marker = "## Authors"
-    
-    start_pos = content.find(start_marker)
-    end_pos = content.find(end_marker)
-    
-    if start_pos == -1 or end_pos == -1:
-        print("Warning: could not locate Supported Versions & Downloads markers in README.md", file=sys.stderr)
-        return False
+    matrix_body = matrix_md.split('## Downloads & Artifact Matrix', 1)[-1].strip()
 
-    new_section = f"{start_marker}\n\n{matrix_md.split('## Downloads & Artifact Matrix', 1)[-1].strip()}\n\n---\n\n"
-    new_content = content[:start_pos] + new_section + content[end_pos:]
-    Path(readme_path).write_text(new_content, encoding="utf-8")
-    print(f"Updated README supported-version table in {readme_path}")
+    # Update RELEASES.md
+    releases_path = ROOT / "RELEASES.md"
+    if releases_path.exists():
+        r_content = releases_path.read_text(encoding="utf-8")
+        start_marker = "## Supported Versions & Downloads"
+        end_marker = "## Installation & Deployment"
+        start_pos = r_content.find(start_marker)
+        end_pos = r_content.find(end_marker)
+        if start_pos != -1 and end_pos != -1:
+            r_section = f"{start_marker}\n\n*All builds are server-side only; connecting Minecraft clients do not require the mod installed.*\n\n{matrix_body}\n\n---\n\n"
+            r_new_content = r_content[:start_pos] + r_section + r_content[end_pos:]
+            releases_path.write_text(r_new_content, encoding="utf-8")
+            print(f"Updated RELEASES.md table in {releases_path}")
+
     return True
 
 def main():

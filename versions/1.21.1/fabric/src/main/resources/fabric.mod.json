@@ -21,5 +21,6 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "1.21.1"
-  }
+  },
+  "icon": "icon.png"
 }

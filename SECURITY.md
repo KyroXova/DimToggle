@@ -1,3 +1,12 @@
+<div align="center">
+
+| [📖<br>Overview](README.md) | [📦<br>Releases](RELEASES.md) | [📜<br>Changelog](changelogs/changelog_1.0.0_to_2.0.1.md) | [🤝<br>Contributing](CONTRIBUTING.md) | [🛡️<br>Security](SECURITY.md) | [⚖️<br><nobr>Code of Conduct</nobr>](CODE_OF_CONDUCT.md) |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+
+</div>
+
+---
+
 # Security Policy
 
 ## Supported Versions

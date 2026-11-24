@@ -21,5 +21,6 @@
   },
   "mixins": [
     "dimtoggle.mixins.json"
-  ]
+  ],
+  "icon": "icon.png"
 }
