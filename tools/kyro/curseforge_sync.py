@@ -77,23 +77,66 @@ def fetch_game_versions(token):
     return []
 
 def fetch_existing_files(token, project_id):
-    url = f"{CURSEFORGE_API_BASE}/projects/{project_id}/files"
-    headers = {
-        "X-Api-Token": token,
-        "User-Agent": "DimToggle-Release-Sync/2.0"
-    }
-    req = urllib.request.Request(url, headers=headers, method="GET")
-    try:
-        with urllib.request.urlopen(req) as resp:
-            if resp.status == 200:
-                data = json.loads(resp.read().decode("utf-8"))
-                print(f"Retrieved {len(data)} existing file record(s) from CurseForge project {project_id}.")
-                return data
-    except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8", errors="replace")
-        print(f"Notice: Failed to fetch existing CurseForge files (HTTP {e.code}): {err}")
-    except Exception as e:
-        print(f"Notice: Exception fetching existing CurseForge files: {e}")
+    """
+    Fetch existing files for the project to prevent duplicate uploads.
+    Uses CurseForge's public files endpoints with pagination.
+    """
+    public_endpoints = [
+        f"https://www.curseforge.com/api/v1/mods/{project_id}/files",
+        f"https://api.curse.tools/v1/cf/mods/{project_id}/files"
+    ]
+
+    for base_url in public_endpoints:
+        all_files = []
+        index = 0
+        page_size = 50
+        success = False
+        try:
+            while True:
+                url = f"{base_url}?pageSize={page_size}&index={index}"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DimToggle-Release-Sync/2.0"
+                }
+                req = urllib.request.Request(url, headers=headers, method="GET")
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    if resp.status == 200:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        items = data.get("data", [])
+                        if not items:
+                            success = True
+                            break
+                        all_files.extend(items)
+                        total = data.get("pagination", {}).get("totalCount", len(all_files))
+                        index += len(items)
+                        if index >= total or len(items) < page_size:
+                            success = True
+                            break
+                    else:
+                        break
+            if success and all_files:
+                print(f"Retrieved {len(all_files)} existing file record(s) from CurseForge public API ({base_url.split('/')[2]}).")
+                return all_files
+        except Exception as e:
+            # Try next endpoint
+            continue
+
+    # Fallback: legacy upload API if token is present
+    if token:
+        url = f"{CURSEFORGE_API_BASE}/projects/{project_id}/files"
+        headers = {
+            "X-Api-Token": token,
+            "User-Agent": "DimToggle-Release-Sync/2.0"
+        }
+        req = urllib.request.Request(url, headers=headers, method="GET")
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    print(f"Retrieved {len(data)} existing file record(s) from CurseForge upload API.")
+                    return data
+        except Exception:
+            pass
+
     return []
 
 def build_version_indices(versions_list, version_types=None):
