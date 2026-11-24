@@ -10,17 +10,6 @@
   ],
   "license": "${mod_license}",
   "environment": "*",
-  "entrypoints": {
-    "main": [
-      "dev.kyroxova.dimtoggle.fabric.Entrypoint"
-    ]
-  },
-  "depends": {
-    "fabricloader": ">=${loader_version}",
-    "minecraft": "26.2",
-    "java": ">=${java_release}"
-  },
-  "mixins": [
-    "dimtoggle.mixins.json"
-  ]
+  "entrypoints": { "main": ["dev.kyroxova.dimtoggle.fabric.Entrypoint"] },
+  "depends": { "fabricloader": ">=${loader_version}", "minecraft": "26.2", "java": ">=${java_release}" }
 }

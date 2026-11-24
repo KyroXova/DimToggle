@@ -46,6 +46,8 @@ jobs:
           python-version: '3.12'
       - name: Generate Batched Matrix
         id: gen
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BATCHES="${{ github.event.inputs.batches || '18' }}"
           MODE="${{ github.event.inputs.mode || 'auto' }}"
@@ -128,22 +130,54 @@ jobs:
       - name: Generate Batch Summary
         if: always()
         run: |
-          echo "### Batch ${{ matrix.batch_id }} Target Summary" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Minecraft | Loader | Status | Built Artifact | File Size | CurseForge |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| :--- | :---: | :---: | :--- | :---: | :---: |" >> "$GITHUB_STEP_SUMMARY"
-          for task in ${{ matrix.tasks }}; do
-            parts=$(echo "$task" | sed 's/^build_//')
-            ldr=$(echo "$parts" | awk -F'_' '{print $NF}')
-            mc_sanitized=$(echo "$parts" | sed "s/_${ldr}$//")
-            mc=$(echo "$mc_sanitized" | tr '_' '.')
-            jar_file=$(find build/${mc}/${ldr}/libs -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" 2>/dev/null | head -n 1)
-            if [ -n "$jar_file" ] && [ -f "$jar_file" ]; then
-              jar_name=$(basename "$jar_file")
-              size_bytes=$(wc -c < "$jar_file" 2>/dev/null || stat -c%s "$jar_file" 2>/dev/null || echo "0")
-              size_kb=$(awk "BEGIN {printf \"%.1f KB\", $size_bytes/1024}")
-              echo "| $mc | $ldr | Success | \`$jar_name\` | $size_kb | [Published / Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "| $mc | $ldr | Failed / Pending | None | N/A | [Pending](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |" >> "$GITHUB_STEP_SUMMARY"
-            fi
-          done
+          python -c "
+          import os, glob, json
+
+          cf_map = {}
+          cf_json_path = 'tools/kyro/curseforge_files.json'
+          if os.path.exists(cf_json_path):
+              try:
+                  with open(cf_json_path, 'r', encoding='utf-8') as f:
+                      cf_map = json.load(f)
+              except Exception:
+                  pass
+
+          tasks = '${{ matrix.tasks }}'.split()
+          runner_name = '${{ runner.name }}'
+          batch_id = '${{ matrix.batch_id }}'
+          est_weight = '${{ matrix.estimated_weight }}'
+
+          lines = []
+          lines.append(f'### Batch {batch_id} Target Summary')
+          lines.append(f'**Runner:** \`{runner_name}\` | **Estimated Weight:** {est_weight}s | **Targets:** {len(tasks)}')
+          lines.append('')
+          lines.append('| Minecraft | Loader | Status | Built Artifact | File Size | CurseForge |')
+          lines.append('| :--- | :---: | :---: | :--- | :---: | :---: |')
+
+          for task in tasks:
+              parts = task.replace('build_', '')
+              ldr = parts.split('_')[-1]
+              mc_sanitized = parts[:-(len(ldr) + 1)]
+              mc = mc_sanitized.replace('_', '.')
+              
+              pattern = f'build/{mc}/{ldr}/libs/*.jar'
+              found = [f for f in glob.glob(pattern) if not f.endswith('-dev.jar') and not f.endswith('-sources.jar')]
+              if found and os.path.exists(found[0]):
+                  jar_path = found[0]
+                  jar_name = os.path.basename(jar_path)
+                  size_bytes = os.path.getsize(jar_path)
+                  size_kb = f'{size_bytes / 1024.0:.1f} KB'
+                  if jar_name in cf_map:
+                      fid = cf_map[jar_name]
+                      cf_cell = f'[Published (ID: {fid})](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files/{fid})'
+                  else:
+                      cf_cell = '[CurseForge Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files)'
+                  lines.append(f'| {mc} | {ldr} | Success | \`{jar_name}\` | {size_kb} | {cf_cell} |')
+              else:
+                  lines.append(f'| {mc} | {ldr} | Failed / Pending | None | N/A | [Pending](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |')
+
+          summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary_path:
+              with open(summary_path, 'a', encoding='utf-8') as f:
+                  f.write('\n'.join(lines) + '\n\n')
+          "
