@@ -101,6 +101,7 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          generate-job-summary: false
 
       - name: Pre-warm Mojang Metadata
         run: |
@@ -129,8 +130,8 @@ jobs:
         run: |
           echo "### Batch ${{ matrix.batch_id }} Target Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Minecraft | Loader | Status | Built Artifact |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| :--- | :---: | :---: | :--- |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Minecraft | Loader | Status | Built Artifact | File Size | CurseForge |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| :--- | :---: | :---: | :--- | :---: | :---: |" >> "$GITHUB_STEP_SUMMARY"
           for task in ${{ matrix.tasks }}; do
             parts=$(echo "$task" | sed 's/^build_//')
             ldr=$(echo "$parts" | awk -F'_' '{print $NF}')
@@ -139,8 +140,10 @@ jobs:
             jar_file=$(find build/${mc}/${ldr}/libs -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" 2>/dev/null | head -n 1)
             if [ -n "$jar_file" ] && [ -f "$jar_file" ]; then
               jar_name=$(basename "$jar_file")
-              echo "| $mc | $ldr | Success | \`$jar_name\` |" >> "$GITHUB_STEP_SUMMARY"
+              size_bytes=$(wc -c < "$jar_file" 2>/dev/null || stat -c%s "$jar_file" 2>/dev/null || echo "0")
+              size_kb=$(awk "BEGIN {printf \"%.1f KB\", $size_bytes/1024}")
+              echo "| $mc | $ldr | Success | \`$jar_name\` | $size_kb | [Published / Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "| $mc | $ldr | Failed / Pending | None |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| $mc | $ldr | Failed / Pending | None | N/A | [Pending](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |" >> "$GITHUB_STEP_SUMMARY"
             fi
           done

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 public final class Entrypoint implements ModInitializer {
     public void onInitialize() {
         Path configDir = FabricLoader.getInstance().getConfigDir();
-        DimToggleMod.initialize(new RuntimePlatform("fabric", configDir));
+        ModConfig config = DimToggleMod.initialize(new RuntimePlatform("fabric", configDir));
+        FabricDimensionControl.initialize(config, configDir);
     }
 }

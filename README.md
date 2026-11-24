@@ -84,6 +84,14 @@ All administrative commands require permission level 2 (Operators) or the `dimto
 
 ---
 
+## Releases & Navigation
+
+| Release | Type | Coverage | Changelog | Direct Downloads | CurseForge |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [**v2.0.0**](https://github.com/KyroXova/DimToggle/releases/tag/v2.0.0) | Production Release | 40 Versions (98 Targets) | [changelog_1.0.0_to_2.0.0.md](changelogs/changelog_1.0.0_to_2.0.0.md) | [98 Asset JARs](https://github.com/KyroXova/DimToggle/releases/tag/v2.0.0) | [CurseForge Files](https://www.curseforge.com/minecraft/mc-mods/dimtoggle/files) |
+
+---
+
 ## Supported Versions
 
 DimToggle is a server-side mod (clients do not need to install it). Native builds are provided across all supported releases:
