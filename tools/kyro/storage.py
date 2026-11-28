@@ -1,9 +1,10 @@
 """Atomic JSON persistence and matrix storage preflight checks."""
-from pathlib import Path
 import json
 import os
 import shutil
 import uuid
+from pathlib import Path
+
 
 def atomic_json(path, value):
     path = Path(path)
@@ -17,7 +18,8 @@ def atomic_json(path, value):
         os.replace(temporary,path)
     finally:
         if temporary.is_file():
-            assert temporary.parent.resolve() == path.parent.resolve()
+            if temporary.parent.resolve() != path.parent.resolve():
+                raise RuntimeError("Temporary file parent does not match target path parent")
             temporary.unlink()
 
 def cache_home():

@@ -1,6 +1,6 @@
 <div align="center">
 
-| [📖<br>Overview](README.md) | [📦<br>Releases](RELEASES.md) | [📜<br>Changelog](changelogs/changelog_1.0.0_to_2.0.1.md) | [🤝<br>Contributing](CONTRIBUTING.md) | [🛡️<br>Security](SECURITY.md) | [⚖️<br><nobr>Code of Conduct</nobr>](CODE_OF_CONDUCT.md) |
+| [🏠<br><nobr>Home</nobr>](https://github.com/KyroXova/DimToggle) | [📦<br><nobr>Releases</nobr>](RELEASES.md) | [📜<br><nobr>Changelog</nobr>](changelogs/changelog_1.0.0_to_2.0.1.md) | [🤝<br><nobr>Contributing</nobr>](CONTRIBUTING.md) | [🛡️<br><nobr>Security</nobr>](SECURITY.md) | [⚖️<br><nobr>Code of Conduct</nobr>](CODE_OF_CONDUCT.md) |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 
 </div>
@@ -22,8 +22,8 @@ Security updates and critical patches are provided for the active release versio
 
 If you discover a security vulnerability in DimToggle, please report it responsibly:
 
-* Email details to `kyroxova@gmail.com` with the subject `[SECURITY] DimToggle Vulnerability Report`.
-* Alternatively, submit a private vulnerability advisory through GitHub Security Advisories.
+* Submit a private vulnerability report via [GitHub Security Advisories](https://github.com/KyroXova/DimToggle/security/advisories/new).
+* Security reports are reviewed directly by the project maintainers in a confidential workspace.
 
 Please include:
 * A description of the vulnerability and its potential impact.

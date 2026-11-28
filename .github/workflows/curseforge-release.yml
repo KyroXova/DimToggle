@@ -6,11 +6,6 @@ on:
     types: [ completed ]
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Explicit release tag to sync (leave empty for mod.properties version)'
-        required: false
-        default: ''
 
 permissions:
   contents: read
@@ -29,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 1
 
       - uses: actions/setup-python@v5
         with:
@@ -38,12 +33,8 @@ jobs:
       - name: Determine release tag
         id: tag
         run: |
-          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
-          else
-            MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
-            TAG="v${MOD_VER}"
-          fi
+          MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
+          TAG="v${MOD_VER}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Release tag: $TAG"
 

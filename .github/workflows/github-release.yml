@@ -6,11 +6,6 @@ on:
     types: [ completed ]
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Explicit release tag (leave empty for mod.properties version)'
-        required: false
-        default: ''
 
 permissions:
   contents: write
@@ -30,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 1
 
       - uses: actions/setup-python@v5
         with:
@@ -39,9 +34,10 @@ jobs:
       - name: Download all batch artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           mkdir -p release-jars run-artifacts
-          BUILD_RUN_ID="${{ github.event.workflow_run.id }}"
+          BUILD_RUN_ID="$WORKFLOW_RUN_ID"
           if [ -z "$BUILD_RUN_ID" ]; then
             BUILD_RUN_ID=$(gh run list --workflow=build.yml --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
           fi
@@ -70,12 +66,8 @@ jobs:
       - name: Determine release tag
         id: tag
         run: |
-          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
-          else
-            MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
-            TAG="v${MOD_VER}"
-          fi
+          MOD_VER=$(grep '^mod\.version=' properties/mod.properties | cut -d'=' -f2)
+          TAG="v${MOD_VER}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Release tag: $TAG"
 

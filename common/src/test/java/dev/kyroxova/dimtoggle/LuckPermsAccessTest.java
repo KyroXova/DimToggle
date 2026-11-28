@@ -2,13 +2,12 @@ package dev.kyroxova.dimtoggle;
 
 import dev.kyroxova.dimtoggle.gameplay.AccessPolicy.Permission;
 import dev.kyroxova.dimtoggle.util.LuckPermsAccess;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import net.luckperms.api.LuckPerms;
-import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.LuckPermsTestHelper;
 import net.luckperms.api.cacheddata.CachedDataManager;
 import net.luckperms.api.cacheddata.CachedPermissionData;
 import net.luckperms.api.model.group.Group;
@@ -46,15 +45,11 @@ public class LuckPermsAccessTest {
         });
         UserManager manager = stub(UserManager.class, (name, args) -> name.equals("getUser") ? user : null);
         LuckPerms provider = stub(LuckPerms.class, (name, args) -> name.equals("getUserManager") ? manager : null);
-        Method register = LuckPermsProvider.class.getDeclaredMethod("register", LuckPerms.class);
-        Method unregister = LuckPermsProvider.class.getDeclaredMethod("unregister");
-        register.setAccessible(true);
-        unregister.setAccessible(true);
-        register.invoke(null, provider);
+        LuckPermsTestHelper.register(provider);
         try {
             UUID id = UUID.randomUUID();
             assertEquals(Permission.DENIED, LuckPermsAccess.check(id, "dimtoggle.minecraft.the_end", true));
             assertEquals(Arrays.asList("default", "builders"), LuckPermsAccess.getGroups(id));
-        } finally { unregister.invoke(null); }
+        } finally { LuckPermsTestHelper.unregister(); }
     }
 }

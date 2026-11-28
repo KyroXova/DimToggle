@@ -6,21 +6,6 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
-    inputs:
-      batches:
-        description: 'Number of matrix batches (default: 18)'
-        required: false
-        default: '18'
-        type: string
-      mode:
-        description: 'Runner allocation mode'
-        required: false
-        default: 'auto'
-        type: choice
-        options:
-          - auto
-          - all-github
-          - all-local
 
 permissions:
   contents: read
@@ -59,9 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BATCHES="${{ github.event.inputs.batches || '18' }}"
-          MODE="${{ github.event.inputs.mode || 'auto' }}"
-          python tools/kyro/generate_matrix.py --batches "$BATCHES" --mode "$MODE"
+          python tools/kyro/generate_matrix.py --batches 18 --mode auto
 
   build:
     name: "${{ matrix.name }}"
@@ -111,7 +94,7 @@ jobs:
           echo "JAVA_25_HOME=${JAVA_HOME_25_X64:-$JAVA_HOME}" >> "$GITHUB_ENV"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           gradle-version: wrapper
           cache-read-only: false
@@ -124,7 +107,7 @@ jobs:
           wait
 
       - name: Build batch ${{ matrix.batch_id }}
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 30
           max_attempts: 3
