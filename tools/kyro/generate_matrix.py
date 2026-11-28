@@ -30,39 +30,21 @@ def load_targets():
     return entries
 
 def detect_self_hosted_runners():
-    token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY", "KyroXova/DimToggle")
-    
     runners_data = []
-    if token:
-        import requests
-        url = f"https://api.github.com/repos/{repo}/actions/runners"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "DimToggle-Adaptive-Matrix"
-        }
+    import shutil
+    import subprocess  # nosec B404
+    gh_bin = shutil.which("gh")
+    if gh_bin:
         try:
-            resp = requests.get(url, headers=headers, timeout=8)
-            if resp.status_code == 200:
-                runners_data = resp.json().get("runners", [])
-        except requests.RequestException as e:
-            print(f"Notice: Failed to fetch runners via GitHub API token: {e}", file=sys.stderr)
-            
-    if not runners_data:
-        import shutil
-        import subprocess  # nosec B404
-        gh_bin = shutil.which("gh")
-        if gh_bin:
-            try:
-                res = subprocess.run(
-                    [gh_bin, "api", f"repos/{repo}/actions/runners", "--jq", ".runners"],
-                    capture_output=True, text=True, timeout=8, shell=False, check=False
-                )  # nosec B603
-                if res.returncode == 0:
-                    runners_data = json.loads(res.stdout)
-            except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
-                print(f"Notice: gh runner detection unavailable: {exc}", file=sys.stderr)
+            res = subprocess.run(
+                [gh_bin, "api", f"repos/{repo}/actions/runners", "--jq", ".runners"],
+                capture_output=True, text=True, timeout=8, shell=False, check=False
+            )  # nosec B603
+            if res.returncode == 0 and res.stdout.strip():
+                runners_data = json.loads(res.stdout)
+        except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
+            print(f"Notice: gh runner detection unavailable: {exc}", file=sys.stderr)
 
     online_kyro_runners = []
     for r in runners_data:

@@ -31,6 +31,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install dependencies
+        run: pip install --no-cache-dir requests
+
       - name: Download all batch artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
