@@ -7,10 +7,10 @@ minimize wrapper downloads, eliminate redundant toolchain initialization,
 and balance workloads across all 18 batches.
 """
 
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,7 +21,7 @@ def load_targets():
     for t in data["targets"]:
         mc = t["minecraft"]
         java_ver = t.get("java", 21)
-        for loader in t["loaders"].keys():
+        for loader in t["loaders"]:
             entries.append({
                 "mc": mc,
                 "loader": loader,
@@ -35,7 +35,7 @@ def detect_self_hosted_runners():
     
     runners_data = []
     if token:
-        import urllib.request
+        import requests
         url = f"https://api.github.com/repos/{repo}/actions/runners"
         headers = {
             "Authorization": f"Bearer {token}",
@@ -43,25 +43,26 @@ def detect_self_hosted_runners():
             "User-Agent": "DimToggle-Adaptive-Matrix"
         }
         try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=8) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                runners_data = data.get("runners", [])
-        except Exception as e:
+            resp = requests.get(url, headers=headers, timeout=8)
+            if resp.status_code == 200:
+                runners_data = resp.json().get("runners", [])
+        except requests.RequestException as e:
             print(f"Notice: Failed to fetch runners via GitHub API token: {e}", file=sys.stderr)
             
     if not runners_data:
-        import shutil, subprocess
-        if shutil.which("gh"):
+        import shutil
+        import subprocess  # nosec B404
+        gh_bin = shutil.which("gh")
+        if gh_bin:
             try:
                 res = subprocess.run(
-                    ["gh", "api", f"repos/{repo}/actions/runners", "--jq", ".runners"],
-                    capture_output=True, text=True, timeout=8
-                )
+                    [gh_bin, "api", f"repos/{repo}/actions/runners", "--jq", ".runners"],
+                    capture_output=True, text=True, timeout=8, shell=False, check=False
+                )  # nosec B603
                 if res.returncode == 0:
                     runners_data = json.loads(res.stdout)
-            except Exception:
-                pass
+            except (subprocess.SubprocessError, json.JSONDecodeError, OSError) as exc:
+                print(f"Notice: gh runner detection unavailable: {exc}", file=sys.stderr)
 
     online_kyro_runners = []
     for r in runners_data:

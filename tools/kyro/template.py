@@ -1,11 +1,12 @@
 """Target selection, structural validation, and checksum-pinned Gradle execution."""
-from pathlib import Path
 import hashlib
 import json
 import os
 import re
-import subprocess
+import subprocess  # nosec B404
 import sys
+from pathlib import Path
+
 from storage import cache_home
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,8 +52,8 @@ def gradle(arguments):
                  env.get(f'JAVA_HOME_{req_java}_arm64') or 
                  env.get('JAVA_HOME'))
     executable = Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java') if java_home else Path('java')
-    version = subprocess.run([str(executable),'-version'],capture_output=True,text=True)
-    match = re.search(r'version "(?:1\.)?(\d+)',version.stderr+version.stdout)
+    version = subprocess.run([str(executable), '-version'], capture_output=True, text=True, check=False, shell=False)  # nosec B603
+    match = re.search(r'version "(?:1\.)?(\d+)', version.stderr+version.stdout)
     if not match or int(match[1]) != config['java']:
         raise ValueError(f'{profile} requires JDK {config["java"]}. Set JAVA_{config["java"]}_HOME or JAVA_HOME.')
     jar = ROOT / 'gradle/wrappers' / profile / 'gradle/wrapper/gradle-wrapper.jar'
@@ -62,75 +63,79 @@ def gradle(arguments):
     env['GRADLE_USER_HOME'] = str(cache_home())
     if java_home: env['JAVA_HOME'] = java_home
     project_root = ROOT / '.gradle/build-roots' / mc / loader
-    project_root.mkdir(parents=True,exist_ok=True)
+    project_root.mkdir(parents=True, exist_ok=True)
     mod_name = properties(ROOT / 'properties/mod.properties').get('mod.name', 'DimToggle')
     (project_root / 'settings.gradle').write_text(f"rootProject.name = '{mod_name}-{mc}-{loader}'\n", encoding='utf-8')
     (project_root / 'build.gradle').write_bytes((ROOT / 'build-logic/target.gradle').read_bytes())
     (project_root / 'gradle.properties').write_bytes((ROOT / 'gradle.properties').read_bytes())
-    command = [str(executable),'-Djava.net.preferIPv4Stack=true','-Dsun.net.client.defaultConnectTimeout=60000','-Dsun.net.client.defaultReadTimeout=120000','-Dorg.gradle.java.installations.fromEnv=JAVA_8_HOME,JAVA_16_HOME,JAVA_17_HOME,JAVA_21_HOME,JAVA_25_HOME']
+    command = [str(executable), '-Djava.net.preferIPv4Stack=true', '-Dsun.net.client.defaultConnectTimeout=60000', '-Dsun.net.client.defaultReadTimeout=120000', '-Dorg.gradle.java.installations.fromEnv=JAVA_8_HOME,JAVA_16_HOME,JAVA_17_HOME,JAVA_21_HOME,JAVA_25_HOME']
     if 'JAVA_8_HOME' in env:
         command.append(f'-Dorg.gradle.java.installations.paths={env["JAVA_8_HOME"]}')
-    command.extend(['-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments])
-    process = subprocess.Popen(command,cwd=ROOT,env=env)
+    command.extend(['-classpath', str(jar), 'org.gradle.wrapper.GradleWrapperMain', '-p', str(project_root), f'-PtemplateRoot={ROOT}', *arguments])
+    process = subprocess.Popen(command, cwd=ROOT, env=env, shell=False)  # nosec B603
     if os.name == 'nt':
         try:
             import ctypes
             ctypes.windll.kernel32.SetPriorityClass(int(process._handle), 0x00004000)
-        except (AttributeError,OSError):
+        except (AttributeError, OSError):
             pass
     return process.wait()
 
+def check(condition, message="Validation assertion failed"):
+    if not condition:
+        raise AssertionError(message)
+
 def validate():
     targets = inventory()
-    assert 'tools/kyro/template.py' in (ROOT / 'modw').read_text(), 'Root shell launcher must select a target'
-    assert 'tools\\kyro\\template.py' in (ROOT / 'modw.bat').read_text(), 'Root Windows launcher must select a target'
-    assert (ROOT / 'build-logic/target.gradle').is_file(), 'Central target build script missing'
+    check('tools/kyro/template.py' in (ROOT / 'modw').read_text(), 'Root shell launcher must select a target')
+    check('tools\\kyro\\template.py' in (ROOT / 'modw.bat').read_text(), 'Root Windows launcher must select a target')
+    check((ROOT / 'build-logic/target.gradle').is_file(), 'Central target build script missing')
     metadata = properties(ROOT / 'properties/mod.properties')
     package = metadata['mod.group']+'.'+metadata['mod.id']
-    package_path = Path(package.replace('.','/'))
+    package_path = Path(package.replace('.', '/'))
     profiles = json.loads((ROOT / 'gradle/profiles.json').read_text())
-    assert hashlib.sha256((ROOT / 'gradle/wrapper/gradle-wrapper.jar').read_bytes()).hexdigest() == profiles['fabric']['wrapper_sha256'], 'Root wrapper checksum mismatch'
-    assert properties(ROOT / 'gradle/wrapper/gradle-wrapper.properties')['distributionSha256Sum'] == properties(ROOT / 'gradle/wrappers/fabric/gradle/wrapper/gradle-wrapper.properties')['distributionSha256Sum']
+    check(hashlib.sha256((ROOT / 'gradle/wrapper/gradle-wrapper.jar').read_bytes()).hexdigest() == profiles['fabric']['wrapper_sha256'], 'Root wrapper checksum mismatch')
+    check(properties(ROOT / 'gradle/wrapper/gradle-wrapper.properties')['distributionSha256Sum'] == properties(ROOT / 'gradle/wrappers/fabric/gradle/wrapper/gradle-wrapper.properties')['distributionSha256Sum'], 'Wrapper distribution checksum mismatch')
     for profile, config in profiles.items():
         directory = ROOT / 'gradle/wrappers' / profile / 'gradle/wrapper'
-        assert hashlib.sha256((directory / 'gradle-wrapper.jar').read_bytes()).hexdigest() == config['wrapper_sha256'], profile
+        check(hashlib.sha256((directory / 'gradle-wrapper.jar').read_bytes()).hexdigest() == config['wrapper_sha256'], f'{profile} wrapper checksum mismatch')
         wrapper = properties(directory / 'gradle-wrapper.properties')
-        assert re.fullmatch(r'[a-f0-9]{64}',wrapper['distributionSha256Sum']), profile
-    assert len({t['minecraft'] for t in targets}) == len(targets), 'Duplicate versions'
-    assert targets[0]['minecraft'] == '1.16' and targets[-1]['minecraft'] == '26.3'
+        check(bool(re.fullmatch(r'[a-f0-9]{64}', wrapper['distributionSha256Sum'])), f'{profile} distribution checksum invalid')
+    check(len({t['minecraft'] for t in targets}) == len(targets), 'Duplicate versions')
+    check(targets[0]['minecraft'] == '1.16' and targets[-1]['minecraft'] == '26.3', 'Version bounds mismatch: expected 1.16 to 26.3')
     common = list((ROOT / 'common/src/main/java').rglob('*.java'))
     for source in common:
-        assert not re.search(r'import\s+(net\.minecraft|net\.fabricmc|net\.minecraftforge|net\.neoforged)',source.read_text()), source
+        check(not re.search(r'import\s+(net\.minecraft|net\.fabricmc|net\.minecraftforge|net\.neoforged)', source.read_text()), f'Forbidden loader import: {source}')
     for target in targets:
         mc = target['minecraft']
         pins = properties(ROOT / 'properties' / f'{mc}.properties')
-        assert set(pins['loaders'].split(',')) == set(target['loaders'])
-        assert int(pins['java.release']) == target['java']
+        check(set(pins['loaders'].split(',')) == set(target['loaders']), f'Loader set mismatch: {mc}')
+        check(int(pins['java.release']) == target['java'], f'Java release mismatch: {mc}')
         for loader in target['loaders']:
-            assert pins[f'{loader}.profile'] in profiles
+            check(pins[f'{loader}.profile'] in profiles, f'Profile unknown for {mc}/{loader}')
             base = ROOT / 'versions' / mc / loader / 'src/main'
             sources = common + list((ROOT / 'versions' / mc / 'common/src/main/java').rglob('*.java')) + list((base / 'java').rglob('*.java'))
             classes = []
             for source in sources:
                 text = source.read_text()
-                source_package = re.search(r'package\s+([\w.]+);',text)[1]
+                source_package = re.search(r'package\s+([\w.]+);', text)[1]
                 classes.append(source_package+'.'+source.stem)
-            assert len(classes) == len(set(classes)), f'Duplicate classes: {mc}/{loader}'
-            assert (base / 'java' / package_path / loader / 'Entrypoint.java').is_file()
+            check(len(classes) == len(set(classes)), f'Duplicate classes: {mc}/{loader}')
+            check((base / 'java' / package_path / loader / 'Entrypoint.java').is_file(), f'Entrypoint missing: {mc}/{loader}')
             resource_paths = set()
-            for resource_root in [ROOT / 'common/src/main/resources', ROOT / 'versions' / mc / 'common/src/main/resources',base / 'resources']:
+            for resource_root in [ROOT / 'common/src/main/resources', ROOT / 'versions' / mc / 'common/src/main/resources', base / 'resources']:
                 for file in resource_root.rglob('*'):
                     if file.is_file() and file.name != '.gitkeep':
                         relative = file.relative_to(resource_root).as_posix()
-                        assert relative not in resource_paths, f'Duplicate resource {mc}/{loader}/{relative}'
+                        check(relative not in resource_paths, f'Duplicate resource {mc}/{loader}/{relative}')
                         resource_paths.add(relative)
             if loader == 'fabric':
                 data = json.loads((base / 'resources/fabric.mod.json').read_text())
-                assert data['entrypoints']['main'] == [package+'.fabric.Entrypoint']
+                check(data['entrypoints']['main'] == [package+'.fabric.Entrypoint'], f'Invalid Fabric entrypoint in {mc}')
             else:
                 import tomllib
                 metadata_file = next((base / 'resources/META-INF').glob('*.toml'))
-                tomllib.loads(metadata_file.read_text().replace('${mod_id}','validationmod'))
+                tomllib.loads(metadata_file.read_text().replace('${mod_id}', 'validationmod'))
     print(f'PASS: {len(targets)} releases, {sum(len(t["loaders"]) for t in targets)} targets; source isolation, metadata, duplicate classes/resources, property consistency.')
 
 def main():

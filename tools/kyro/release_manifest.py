@@ -6,12 +6,11 @@ GitHub Release descriptions with Minecraft-version-grouped download links,
 file sizes, SHA-256 checksums, and synchronizes the README download table.
 """
 
-import os
-import sys
-import glob
-import json
-import hashlib
 import argparse
+import glob
+import hashlib
+import json
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -33,7 +32,7 @@ def format_size(bytes_count):
     return f"{mb:.2f} MB"
 
 def parse_jar_name(filename):
-    base = filename[:-4] if filename.endswith('.jar') else filename
+    base = filename.removesuffix('.jar')
     parts = base.split('-')
     if len(parts) >= 4 and parts[0] == 'dimtoggle':
         mc = parts[1]
@@ -47,25 +46,25 @@ def load_curseforge_map():
     if cf_path.exists():
         try:
             return json.loads(cf_path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError):
+            return {}
     return {}
 
 def generate_from_github(tag_name, repo_name="KyroXova/DimToggle", token=None):
-    import urllib.request
+    import requests
     url = f"https://api.github.com/repos/{repo_name}/releases/tags/{tag_name}"
     headers = {"User-Agent": "DimToggle-Release-Sync/2.0"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    resp = requests.get(url, headers=headers, timeout=15)
+    resp.raise_for_status()
+    data = resp.json()
     
     cf_map = load_curseforge_map()
     manifest = []
     for asset in data.get("assets", []):
         filename = asset["name"]
-        if filename.endswith("-dev.jar") or filename.endswith("-sources.jar") or not filename.endswith(".jar"):
+        if filename.endswith(("-dev.jar", "-sources.jar")) or not filename.endswith(".jar"):
             continue
         mc, loader, version = parse_jar_name(filename)
         size_bytes = asset["size"]
@@ -99,7 +98,7 @@ def generate_manifest(jars_dir, tag_name, repo_name="KyroXova/DimToggle"):
     
     for jar_path in jars:
         filename = os.path.basename(jar_path)
-        if filename.endswith('-dev.jar') or filename.endswith('-sources.jar'):
+        if filename.endswith(('-dev.jar', '-sources.jar')):
             continue
         
         mc, loader, version = parse_jar_name(filename)

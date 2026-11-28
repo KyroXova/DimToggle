@@ -5,12 +5,11 @@ Analyzes historical successful GitHub Actions runs, measures target and batch
 execution times, runner utilization, and produces optimal balanced schedules.
 """
 
-import os
-import sys
+import datetime
 import json
 import re
-import datetime
-import subprocess
+import shutil
+import subprocess  # nosec B404
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,18 +20,22 @@ CF_RELEASE_RUN = "45198269674"
 def parse_iso(dt_str):
     if not dt_str:
         return None
-    return datetime.datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+    return datetime.datetime.fromisoformat(dt_str)
 
 def fetch_run_data(run_id, repo="KyroXova/DimToggle"):
-    cmd = ["gh", "run", "view", str(run_id), "--repo", repo, "--json", "jobs,status,conclusion,name,headSha,createdAt"]
-    out = subprocess.check_output(cmd).decode("utf-8", errors="ignore")
-    return json.loads(out)
+    safe_id = str(int(str(run_id).strip()))
+    gh_bin = shutil.which("gh") or "gh"
+    cmd = [gh_bin, "run", "view", safe_id, "--repo", repo, "--json", "jobs,status,conclusion,name,headSha,createdAt"]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=True, shell=False)  # nosec B603
+    return json.loads(res.stdout)
 
 def extract_curseforge_map(repo="KyroXova/DimToggle"):
-    cmd = ["gh", "run", "view", CF_RELEASE_RUN, "--repo", repo, "--log"]
-    out = subprocess.check_output(cmd).decode("utf-8", errors="ignore")
+    safe_id = str(int(CF_RELEASE_RUN.strip()))
+    gh_bin = shutil.which("gh") or "gh"
+    cmd = [gh_bin, "run", "view", safe_id, "--repo", repo, "--log"]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=True, shell=False)  # nosec B603
     pattern = re.compile(r"Uploaded\s+([\w\.\-]+?\.jar)\s+->\s+CurseForge response:\s*\{\"id\":(\d+)\}")
-    matches = pattern.findall(out)
+    matches = pattern.findall(res.stdout)
     cf_map = {}
     for jar, fid in matches:
         cf_map[jar] = fid
@@ -81,7 +84,7 @@ def analyze_historical_runs():
             "min_seconds": round(min_dur, 1),
             "max_seconds": round(max_dur, 1),
             "samples": len(durations),
-            "runners": list(set(e["runner_name"] for e in entries))
+            "runners": list({e["runner_name"] for e in entries})
         }
 
     return summary

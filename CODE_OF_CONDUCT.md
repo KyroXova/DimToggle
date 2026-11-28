@@ -1,6 +1,6 @@
 <div align="center">
 
-| [📖<br>Overview](README.md) | [📦<br>Releases](RELEASES.md) | [📜<br>Changelog](changelogs/changelog_1.0.0_to_2.0.1.md) | [🤝<br>Contributing](CONTRIBUTING.md) | [🛡️<br>Security](SECURITY.md) | [⚖️<br><nobr>Code of Conduct</nobr>](CODE_OF_CONDUCT.md) |
+| [🏠<br><nobr>Home</nobr>](https://github.com/KyroXova/DimToggle) | [📦<br><nobr>Releases</nobr>](RELEASES.md) | [📜<br><nobr>Changelog</nobr>](changelogs/changelog_1.0.0_to_2.0.1.md) | [🤝<br><nobr>Contributing</nobr>](CONTRIBUTING.md) | [🛡️<br><nobr>Security</nobr>](SECURITY.md) | [⚖️<br><nobr>Code of Conduct</nobr>](CODE_OF_CONDUCT.md) |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 
 </div>
