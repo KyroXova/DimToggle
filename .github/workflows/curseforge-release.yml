@@ -1,10 +1,6 @@
 name: curseforge-release
 
 on:
-  workflow_run:
-    workflows: [ "github-release" ]
-    types: [ completed ]
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -13,13 +9,6 @@ permissions:
 jobs:
   curseforge:
     name: Sync Release to CurseForge
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main' &&
-       (contains(github.event.workflow_run.head_commit.message, '(#') ||
-        contains(github.event.workflow_run.head_commit.message, 'Merge pull request #') ||
-        contains(github.event.workflow_run.head_commit.message, 'Merge branch ')))
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
