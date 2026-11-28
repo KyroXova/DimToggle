@@ -10,9 +10,8 @@ import json
 import os
 import sys
 import time
-import urllib.error
-import urllib.request
-import uuid
+
+import requests
 
 CURSEFORGE_API_BASE = "https://minecraft.curseforge.com/api"
 
@@ -41,42 +40,34 @@ def load_target_properties(mc):
 
 def fetch_version_types(token):
     url = f"{CURSEFORGE_API_BASE}/game/version-types"
-    if not url.startswith("https://"):
-        raise ValueError(f"Insecure URL: {url}")
     headers = {
         "X-Api-Token": token,
         "User-Agent": "DimToggle-Release-Sync/2.0"
     }
-    req = urllib.request.Request(url, headers=headers, method="GET")
     try:
-        with urllib.request.urlopen(req) as resp:  # nosec B310
-            if resp.status == 200:
-                data = json.loads(resp.read().decode("utf-8"))
-                print(f"Retrieved {len(data)} game version types from CurseForge.")
-                return data
-    except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            print(f"Retrieved {len(data)} game version types from CurseForge.")
+            return data
+    except requests.RequestException as e:
         print(f"Notice: Failed to fetch CurseForge version types: {e}")
     return []
 
 def fetch_game_versions(token):
     url = f"{CURSEFORGE_API_BASE}/game/versions"
-    if not url.startswith("https://"):
-        raise ValueError(f"Insecure URL: {url}")
     headers = {
         "X-Api-Token": token,
         "User-Agent": "DimToggle-Release-Sync/2.0"
     }
-    req = urllib.request.Request(url, headers=headers, method="GET")
     try:
-        with urllib.request.urlopen(req) as resp:  # nosec B310
-            if resp.status == 200:
-                data = json.loads(resp.read().decode("utf-8"))
-                print(f"Retrieved {len(data)} game version identifiers from CurseForge.")
-                return data
-    except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8", errors="replace")
-        print(f"Failed to fetch CurseForge game versions (HTTP {e.code}): {err}")
-    except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            print(f"Retrieved {len(data)} game version identifiers from CurseForge.")
+            return data
+        print(f"Failed to fetch CurseForge game versions (HTTP {resp.status_code}): {resp.text}")
+    except requests.RequestException as e:
         print(f"Exception fetching CurseForge game versions: {e}")
     return []
 
@@ -98,51 +89,45 @@ def fetch_existing_files(token, project_id):
         try:
             while True:
                 url = f"{base_url}?pageSize={page_size}&index={index}"
-                if not url.startswith("https://"):
-                    raise ValueError(f"Insecure URL: {url}")
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DimToggle-Release-Sync/2.0"
                 }
-                req = urllib.request.Request(url, headers=headers, method="GET")
-                with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310
-                    if resp.status == 200:
-                        data = json.loads(resp.read().decode("utf-8"))
-                        items = data.get("data", [])
-                        if not items:
-                            success = True
-                            break
-                        all_files.extend(items)
-                        total = data.get("pagination", {}).get("totalCount", len(all_files))
-                        index += len(items)
-                        if index >= total or len(items) < page_size:
-                            success = True
-                            break
-                    else:
+                resp = requests.get(url, headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    items = data.get("data", [])
+                    if not items:
+                        success = True
                         break
+                    all_files.extend(items)
+                    total = data.get("pagination", {}).get("totalCount", len(all_files))
+                    index += len(items)
+                    if index >= total or len(items) < page_size:
+                        success = True
+                        break
+                else:
+                    break
             if success and all_files:
                 print(f"Retrieved {len(all_files)} existing file record(s) from CurseForge public API ({base_url.split('/')[2]}).")
                 return all_files
-        except (urllib.error.URLError, json.JSONDecodeError, OSError, TimeoutError) as exc:
+        except requests.RequestException as exc:
             print(f"Notice: public endpoint {base_url} check failed: {exc}", file=sys.stderr)
             continue
 
     # Fallback: legacy upload API if token is present
     if token:
         url = f"{CURSEFORGE_API_BASE}/projects/{project_id}/files"
-        if not url.startswith("https://"):
-            raise ValueError(f"Insecure URL: {url}")
         headers = {
             "X-Api-Token": token,
             "User-Agent": "DimToggle-Release-Sync/2.0"
         }
-        req = urllib.request.Request(url, headers=headers, method="GET")
         try:
-            with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310
-                if resp.status == 200:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    print(f"Retrieved {len(data)} existing file record(s) from CurseForge upload API.")
-                    return data
-        except (urllib.error.URLError, json.JSONDecodeError, OSError, TimeoutError) as exc:
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                print(f"Retrieved {len(data)} existing file record(s) from CurseForge upload API.")
+                return data
+        except requests.RequestException as exc:
             print(f"Notice: legacy upload endpoint check skipped: {exc}", file=sys.stderr)
 
     return []
@@ -235,75 +220,36 @@ def sync_description(token, project_id, description_text):
     url = f"{CURSEFORGE_API_BASE}/projects/{project_id}/description"
     headers = {
         "X-Api-Token": token,
-        "Content-Type": "application/json",
         "User-Agent": "DimToggle-Release-Sync/2.0"
     }
-    if not url.startswith("https://"):
-        raise ValueError(f"Insecure URL: {url}")
-    payload = json.dumps({"description": description_text}).encode("utf-8")
-    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(req) as resp:  # nosec B310
-            if resp.status in (200, 204):
-                print("CurseForge project description updated successfully.")
-                return True
-            else:
-                print(f"CurseForge description update returned HTTP status {resp.status}")
-                return False
-    except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8", errors="replace")
-        print(f"CurseForge description update HTTP {e.code}: {e.reason}\n{err}")
+        resp = requests.post(url, json={"description": description_text}, headers=headers, timeout=15)
+        if resp.status_code in (200, 204):
+            print("CurseForge project description updated successfully.")
+            return True
+        print(f"CurseForge description update HTTP {resp.status_code}: {resp.text}")
         return False
-    except (urllib.error.URLError, OSError) as e:
+    except requests.RequestException as e:
         print(f"Failed to update CurseForge description: {e}")
         return False
 
 def upload_file_multipart(token, project_id, jar_path, metadata_dict, candidates_map=None):
     url = f"{CURSEFORGE_API_BASE}/projects/{project_id}/upload-file"
-    boundary = f"----WebKitFormBoundary{uuid.uuid4().hex}"
-    
     filename = os.path.basename(jar_path)
-    metadata_json = json.dumps(metadata_dict)
-
-    with open(jar_path, "rb") as f:
-        file_bytes = f.read()
-
-    body = bytearray()
-    
-    # Metadata field
-    body.extend(f"--{boundary}\r\n".encode())
-    body.extend(b'Content-Disposition: form-data; name="metadata"\r\n\r\n')
-    body.extend(metadata_json.encode("utf-8"))
-    body.extend(b"\r\n")
-
-    # File field
-    body.extend(f"--{boundary}\r\n".encode())
-    body.extend(f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'.encode())
-    body.extend(b"Content-Type: application/java-archive\r\n\r\n")
-    body.extend(file_bytes)
-    body.extend(b"\r\n")
-
-    body.extend(f"--{boundary}--\r\n".encode())
-
     headers = {
         "X-Api-Token": token,
-        "Content-Type": f"multipart/form-data; boundary={boundary}",
-        "Content-Length": str(len(body)),
         "User-Agent": "DimToggle-Release-Sync/2.0"
     }
-
-    if not url.startswith("https://"):
-        raise ValueError(f"Insecure URL: {url}")
-    req = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(req) as resp:  # nosec B310
-            res_data = resp.read().decode("utf-8")
-            print(f"Uploaded {filename} -> CurseForge response: {res_data}")
+        with open(jar_path, "rb") as f:
+            files = {"file": (filename, f, "application/java-archive")}
+            data = {"metadata": json.dumps(metadata_dict)}
+            resp = requests.post(url, headers=headers, files=files, data=data, timeout=60)
+        if resp.status_code in (200, 201):
+            print(f"Uploaded {filename} -> CurseForge response: {resp.text}")
             return True
-    except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8", errors="replace")
-        print(f"Failed to upload {filename} (HTTP {e.code}): {err}")
-        # If already exists or duplicate, don't fail entire run
+        err = resp.text
+        print(f"Failed to upload {filename} (HTTP {resp.status_code}): {err}")
         if "already exists" in err.lower() or "duplicate" in err.lower():
             return True
         import re
@@ -330,7 +276,7 @@ def upload_file_multipart(token, project_id, jar_path, metadata_dict, candidates
                     metadata_dict["gameVersions"] = [x for x in gvs if x != bad_id]
                 return upload_file_multipart(token, project_id, jar_path, metadata_dict, candidates_map)
         return False
-    except (urllib.error.URLError, OSError) as e:
+    except requests.RequestException as e:
         print(f"Error uploading {filename}: {e}")
         return False
 

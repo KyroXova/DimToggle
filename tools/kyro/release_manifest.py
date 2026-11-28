@@ -51,16 +51,14 @@ def load_curseforge_map():
     return {}
 
 def generate_from_github(tag_name, repo_name="KyroXova/DimToggle", token=None):
-    import urllib.request
+    import requests
     url = f"https://api.github.com/repos/{repo_name}/releases/tags/{tag_name}"
-    if not url.startswith("https://"):
-        raise ValueError(f"Insecure URL: {url}")
     headers = {"User-Agent": "DimToggle-Release-Sync/2.0"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as resp:  # nosec B310
-        data = json.loads(resp.read().decode("utf-8"))
+    resp = requests.get(url, headers=headers, timeout=15)
+    resp.raise_for_status()
+    data = resp.json()
     
     cf_map = load_curseforge_map()
     manifest = []

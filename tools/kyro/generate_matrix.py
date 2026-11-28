@@ -35,21 +35,18 @@ def detect_self_hosted_runners():
     
     runners_data = []
     if token:
-        import urllib.request
+        import requests
         url = f"https://api.github.com/repos/{repo}/actions/runners"
-        if not url.startswith("https://api.github.com/"):
-            raise ValueError(f"Insecure URL: {url}")
         headers = {
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "User-Agent": "DimToggle-Adaptive-Matrix"
         }
         try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=8) as resp:  # nosec B310
-                data = json.loads(resp.read().decode("utf-8"))
-                runners_data = data.get("runners", [])
-        except (urllib.error.URLError, json.JSONDecodeError, OSError, TimeoutError) as e:
+            resp = requests.get(url, headers=headers, timeout=8)
+            if resp.status_code == 200:
+                runners_data = resp.json().get("runners", [])
+        except requests.RequestException as e:
             print(f"Notice: Failed to fetch runners via GitHub API token: {e}", file=sys.stderr)
             
     if not runners_data:
