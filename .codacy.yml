@@ -1,0 +1,20 @@
+---
+engines:
+  prospector:
+    enabled: false
+
+duplication:
+  exclude_paths:
+    - "build/**"
+    - ".gradle/**"
+    - ".template-cache/**"
+    - "gradle/wrapper/**"
+    - "run/**"
+
+exclude_paths:
+  - "build/**"
+  - "**/build/**"
+  - ".gradle/**"
+  - ".template-cache/**"
+  - "gradle/wrapper/**"
+  - "run/**"

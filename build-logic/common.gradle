@@ -78,4 +78,12 @@ jar {
     from(new File(templateRoot,'LICENSE'))
     manifest { attributes('Implementation-Version': project.version) }
 }
+apply plugin: 'jacoco'
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
 test { maxParallelForks = 2 }
